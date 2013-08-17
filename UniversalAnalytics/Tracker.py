@@ -1,7 +1,50 @@
-from HTTP import HTTPPost
-from HTTP import debug as HTTPdebugging
+from urllib2 import urlopen, build_opener, install_opener
+from urllib2 import Request, HTTPSHandler
+from urllib import urlencode
 
-HTTPdebugging()
+
+class HTTPPost(object):
+
+    endpoint = 'https://www.google-analytics.com/collect'
+    attribs = {}
+    base_attribs = {}
+    
+    @staticmethod
+    def debug(): 
+        handler = HTTPSHandler(debuglevel = 1)
+        opener = build_opener(handler)
+        install_opener(opener)
+
+    # Store properties for all requests
+    def __init__(self, *args, **opts):
+        self.attribs = {}
+        self.base_attribs = opts
+        self.attribs.update(opts)
+
+    # Clear transcient properties; restore only the props given at instantiation (__init__)
+    def reset(self):
+        self.attribs = {}
+        self.attribs.update(self.base_attribs)
+
+    # Store transcient properties for subsequent requests
+    def update(self, **opts):
+        self.attribs.update(opts)
+
+    # Apply stored properties to the given dataset & POST to the configured endpoint 
+    def send(self, **data):
+        data.update(self.base_attribs)
+        data.update(self.attribs)
+        request = Request(
+                self.endpoint, 
+                data = urlencode(data), 
+                headers = {
+                    'User-Agent': 'Analytics Pros - Universal Analytics (Python)'
+                }
+            )
+        urlopen(request)
+
+
+
 
 class Tracker(object):
     trackers = {}
@@ -13,6 +56,7 @@ class Tracker(object):
             'location': 'dl',
             'hostname': 'dh',
             'noninteraction': 'ni',
+            'noninteractive': 'ni',
             'non-interaction': 'ni',
             'nonInteration': 'ni',
             'client-id': 'cid',
@@ -77,14 +121,18 @@ class Tracker(object):
         if hittype == 'event' and len(args) > 2:
             data['ec'] = args[0] # event category
             data['ea'] = args[1] # event action
-            if len(args) > 2:
+            if len(args) > 2 and isinstance(args[2], basestring):
                 data['el'] = args[2] # event label
-            if len(args) > 3:
+            if len(args) > 3 and isinstance(args[3], int):
                 data['ev'] = args[3] # event value
 
         for item in args:
             if isinstance(item, dict):
-                data.update(item)
+                for key, val in item.items():
+                    if key in self.data_mapping:
+                        data[ self.data_mapping[ key ] ] = val
+                    else:
+                        data[ key ] = val
 
         for key, val in opts:
             if key in self.data_mapping:
