@@ -1,9 +1,56 @@
+""" Universal Analytics Measurement Protocol library for Python.
+    
+    Copyright 2013, Analytics Pros.
+    <www.analyticspros.com>
+
+
+"""
+
 from urllib2 import urlopen, build_opener, install_opener
 from urllib2 import Request, HTTPSHandler
 from urllib import urlencode
 
+import datetime
+import time
+
+
+class Time(object):
+    
+    @classmethod
+    def from_unix(cls, seconds, milliseconds = 0):
+        """ Produce a full |datetime.datetime| object from a Unix timestamp """
+        base = list(time.gmtime(seconds))[0:6]
+        base.append(milliseconds * 1000) # microseconds
+        return datetime.datetime(* base)
+
+    @classmethod
+    def to_unix(cls, timestamp):
+        """ Wrapper over time module to produce Unix epoch time as a float """
+        if not isinstance(timestamp, datetime.datetime):
+            raise TypeError, 'Time.milliseconds expects a datetime object'
+        base = time.mktime(timestamp.timetuple())
+        return base
+
+    @classmethod
+    def milliseconds_offset(cls, timestamp, now = None):
+        """ Offset time (in milliseconds) from a |datetime.datetime| object to now """
+        if isinstance(timestamp, (int, float)):
+            base = timestamp
+        else:
+            base = cls.to_unix(timestamp) 
+            base = base + (timestamp.microsecond / 1000000)
+        if now is None:
+            now = time.time()
+        return (now - base) * 1000
+
 
 class HTTPPost(object):
+    """ URL Construction and request handling abstraction.
+        This is not intended to be used outside this module.
+
+        Automates mapping of persistent state (i.e. query parameters)
+        onto transcient datasets for each query.
+    """
 
     endpoint = 'https://www.google-analytics.com/collect'
     attribs = {}
@@ -32,6 +79,7 @@ class HTTPPost(object):
 
     @classmethod
     def fixUTF8(cls, data):
+        """ Convert all strings to UTF-8 """
         for key in data:
             if isinstance(data[ key ], basestring):
                 data[ key ] = data[ key ].encode('utf-8')
@@ -40,7 +88,7 @@ class HTTPPost(object):
     def send(self, **data):
         data.update(self.base_attribs)
         data.update(self.attribs)
-        self.fixUTF8(data)
+        self.fixUTF8(data) # Ensure proper encoding for UA's servers...
         request = Request(
                 self.endpoint, 
                 data = urlencode(data), 
@@ -65,7 +113,17 @@ class Tracker(object):
         for i in names:
             cls.data_mapping[ i ] = base
 
+    @classmethod
+    def hittime(cls, timestamp = None, age = None, milliseconds = None):
+        """ Returns an integer represeting the milliseconds offset for a given hit (relative to now) """
+        if isinstance(timestamp, (int, float)):
+            return int(Time.miliseconds_offset(Time.from_unix(timestamp, milliseconds = milliseconds)))
+        if isinstance(timestamp, datetime.datetime):
+            return int(Time.milliseconds_offset(timestamp))
+        if isinstance(age, (int, float)):
+            return int(age * 1000) + (milliseconds or 0)
 
+            
 
     def __init__(self, account, name = None, client_id = None):
         self.account = account
@@ -80,10 +138,19 @@ class Tracker(object):
         data = {}
         data.update(self.state)
 
-        if hittype not in self.valid_hittypes:
-            raise KeyError('Unsupported Universal Analytics Hit Type')
+        hittime = opts.get('hittime', None)
+        hitage = opts.get('hitage', None)
 
-        if hittype == 'pageview' and isinstance(args[0], basestring):
+        if hittime is not None:
+            data['qt'] = self.hittime(timestamp = hittime)
+
+        if hitage is not None:
+            data['qt'] = self.hittime(age = hitage)
+
+        if hittype not in self.valid_hittypes:
+            raise KeyError('Unsupported Universal Analytics Hit Type: {0}'.format(repr(hittype)))
+
+        if hittype == 'pageview' and len(args) and isinstance(args[0], basestring):
             data['dp'] = args[0] # page path
 
         if hittype == 'event' and len(args) > 1:
@@ -108,7 +175,7 @@ class Tracker(object):
                 data['utl'] = args[3] # timing label
 
 
-        for item in args: # process dictionary arguments
+        for item in args: # process dictionary-object arguments of transcient data
             if isinstance(item, dict):
                 for key, val in item.items():
                     if key in self.data_mapping:
@@ -116,16 +183,17 @@ class Tracker(object):
                     else:
                         data[ key ] = val
 
-        for key, val in opts: # process attributes given as named arguments
+        for key, val in opts.items(): # process attributes given as named arguments
             if key in self.data_mapping:
                 data[ self.data_mapping[ key ] ] = val
 
 
+        # Transmit the hit to Google...
         self.http.send(t = hittype, **data)
 
 
 
-    # Setting attibutes of the session/hit/etc (inc. custom dimensions/metrics)
+    # Setting persistent attibutes of the session/hit/etc (inc. custom dimensions/metrics)
     def set(self, name, value):
         if name in self.data_mapping:
             self.state[ self.data_mapping[ name ] ] = value
@@ -141,6 +209,7 @@ Tracker.params('dh', 'hostname')
 Tracker.params('ni', 'noninteractive', 'noninteraction', 'nonInteraction')
 Tracker.params('sc', 'sessioncontrol', 'session-control', 'sessionControl')
 Tracker.params('dr', 'referrer', 'referer')
+Tracker.params('qt', 'queueTime', 'queue-time')
 
 # Campaign attribution
 Tracker.params('cn', 'campaign', 'campaignName', 'campaign-name')
@@ -200,7 +269,8 @@ for i in range(0,200):
     Tracker.params('cd{0}'.format(i), 'dimension{0}'.format(i))
     Tracker.params('cm{0}'.format(i), 'metric{0}'.format(i))
 
-
+# Shortcut for creating trackers, similar to <analytics.js> interface
 def create(account, name = None):
     return Tracker(account, name)
+
 # vim: set nowrap tabstop=4 shiftwidth=4 softtabstop=0 expandtab textwidth=0 filetype=python foldmethod=indent foldcolumn=4

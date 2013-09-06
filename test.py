@@ -2,7 +2,6 @@
 
 from UniversalAnalytics import Tracker
 from UniversalAnalytics import HTTPLog
-import sys
 
 HTTPLog.consume() # Overtakes standard output to show cleaner reports from urllib2's debugging
 Tracker.HTTPPost.debug() # Enables debugging in urllib2
@@ -15,14 +14,19 @@ tracker.send('pageview', '/test')
 tracker.send('event', 'mycat', 'myact', 'mylbl', { 'noninteraction': 1, 'page': '/1' })
 tracker.send('social', 'facebook', 'test', '/test#social')
 
+# A few more hits for good measure (testing real-time support for time offset)
+tracker.send('pageview', '/test', { 'campaignName': 'testing2' }, hitage = 60 * 5) # 5 minutes ago
+tracker.send('pageview', '/test', { 'campaignName': 'testing3' }, hitage = 60 * 20) # 20 minutes ago
+
+
 tracker.send('item', {
     'transactionId': '12345abc',
     'itemName': 'pizza',
     'itemCode': 'abc',
     'itemCategory': 'hawaiian',
-    'itemPrice': 24.55,
+    
     'itemQuantity': 1
-})
+}, hitage = 7200)
 
 tracker.send('transaction', {
     'transactionId': '12345abc',
@@ -31,8 +35,7 @@ tracker.send('transaction', {
     'transactionTax': 3.00,
     'transactionShipping': 0.45,
     'transactionCurrency': 'USD'
-})
-
+}, hitage = 7200)
 
 
 
