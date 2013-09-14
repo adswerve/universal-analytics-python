@@ -1,10 +1,11 @@
-""" Universal Analytics Measurement Protocol library for Python.
-    
-    Copyright 2013, Analytics Pros.
-    <www.analyticspros.com>
-
-
-"""
+###############################################################################
+# Universal Analytics for Python
+# Copyright (c) 2013, Analytics Pros
+# 
+# This project is free software, distributed under the BSD license. 
+# Analytics Pros offers consulting and integration services if your firm needs 
+# assistance in strategy, implementation, or auditing existing work.
+###############################################################################
 
 from urllib2 import urlopen, build_opener, install_opener
 from urllib2 import Request, HTTPSHandler
@@ -15,6 +16,7 @@ import time
 
 
 class Time(object):
+    """ Wrappers and convenience methods for processing various time representations """
     
     @classmethod
     def from_unix(cls, seconds, milliseconds = 0):
@@ -57,7 +59,8 @@ class HTTPPost(object):
     base_attribs = {}
     
     @staticmethod
-    def debug(): 
+    def debug():
+        """ Activate debugging on urllib2 """
         handler = HTTPSHandler(debuglevel = 1)
         opener = build_opener(handler)
         install_opener(opener)
@@ -102,6 +105,7 @@ class HTTPPost(object):
 
 
 class Tracker(object):
+    """ Primary tracking interface for Universal Analytics """
     trackers = {}
     state = {}
     data_mapping = {  }
@@ -141,10 +145,10 @@ class Tracker(object):
         hittime = opts.get('hittime', None)
         hitage = opts.get('hitage', None)
 
-        if hittime is not None:
+        if hittime is not None: # an absolute timestamp
             data['qt'] = self.hittime(timestamp = hittime)
 
-        if hitage is not None:
+        if hitage is not None: # a relative age (in seconds)
             data['qt'] = self.hittime(age = hitage)
 
         if hittype not in self.valid_hittypes:
@@ -206,7 +210,6 @@ Tracker.params('dp', 'page', 'path')
 Tracker.params('dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
 Tracker.params('dl', 'location')
 Tracker.params('dh', 'hostname')
-Tracker.params('ni', 'noninteractive', 'noninteraction', 'nonInteraction')
 Tracker.params('sc', 'sessioncontrol', 'session-control', 'sessionControl')
 Tracker.params('dr', 'referrer', 'referer')
 Tracker.params('qt', 'queueTime', 'queue-time')
@@ -244,6 +247,14 @@ Tracker.params('iq', 'item-quantity', 'itemQuantity')
 Tracker.params('ic', 'item-code', 'sku', 'itemCode')
 Tracker.params('iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
 
+# Events
+Tracker.params('ec', 'event-category', 'eventCategory', 'category')
+Tracker.params('ea', 'event-action', 'eventAction', 'action')
+Tracker.params('el', 'event-label', 'eventLabel', 'label')
+Tracker.params('ev', 'event-value', 'eventValue', 'value')
+Tracker.params('ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
+
+
 # Social
 Tracker.params('sa', 'social-action', 'socialAction')
 Tracker.params('sn', 'social-network', 'socialNetwork')
@@ -269,7 +280,7 @@ for i in range(0,200):
     Tracker.params('cd{0}'.format(i), 'dimension{0}'.format(i))
     Tracker.params('cm{0}'.format(i), 'metric{0}'.format(i))
 
-# Shortcut for creating trackers, similar to <analytics.js> interface
+# Shortcut for creating trackers
 def create(account, name = None):
     return Tracker(account, name)
 

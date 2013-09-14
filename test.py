@@ -1,20 +1,39 @@
 #!/usr/bin/python
+###############################################################################
+# Test and example kit for Universal Analytics for Python
+# Copyright (c) 2013, Analytics Pros
+# 
+# This project is free software, distributed under the BSD license. 
+# Analytics Pros offers consulting and integration services if your firm needs 
+# assistance in strategy, implementation, or auditing existing work.
+###############################################################################
 
 from UniversalAnalytics import Tracker
-from UniversalAnalytics import HTTPLog
 
-HTTPLog.consume() # Overtakes standard output to show cleaner reports from urllib2's debugging
-Tracker.HTTPPost.debug() # Enables debugging in urllib2
+DEBUG = True
 
-tracker = Tracker.create('UA-8705807-11', name = 'mytracker')
+if DEBUG: # these are optional...
+    from UniversalAnalytics import HTTPLog
+    HTTPLog.consume() # Filters urllib2's standard debugging for readability
+    Tracker.HTTPPost.debug() # Enables debugging in urllib2
 
+# Create the tracker
+tracker = Tracker.create('UA-XXXXX-Y', name = 'mytracker')
+
+# Apply campaign settings
 tracker.set('campaignName', 'testing')
 tracker.set('campaignMedium', 'testing')
+
+# Send a pageview
 tracker.send('pageview', '/test')
+
+# Send an event
 tracker.send('event', 'mycat', 'myact', 'mylbl', { 'noninteraction': 1, 'page': '/1' })
+
+# Send a social hit
 tracker.send('social', 'facebook', 'test', '/test#social')
 
-# A few more hits for good measure (testing real-time support for time offset)
+# A few more hits for good measure, testing real-time support for time offset
 tracker.send('pageview', '/test', { 'campaignName': 'testing2' }, hitage = 60 * 5) # 5 minutes ago
 tracker.send('pageview', '/test', { 'campaignName': 'testing3' }, hitage = 60 * 20) # 20 minutes ago
 
@@ -24,7 +43,6 @@ tracker.send('item', {
     'itemName': 'pizza',
     'itemCode': 'abc',
     'itemCategory': 'hawaiian',
-    
     'itemQuantity': 1
 }, hitage = 7200)
 

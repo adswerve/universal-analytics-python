@@ -1,8 +1,15 @@
 #!/usr/bin/python
+###############################################################################
+# Formatting filter for urllib2's HTTPHandler(debuglevel=1) output
+# Copyright (c) 2013, Analytics Pros
+# 
+# This project is free software, distributed under the BSD license. 
+# Analytics Pros offers consulting and integration services if your firm needs 
+# assistance in strategy, implementation, or auditing existing work.
+###############################################################################
 
-# Filter the output from urllib2's HTTPHandler(debuglevel=1) for readability
 
-import sys, re, io, os
+import sys, re, os
 from cStringIO import StringIO
 
 
@@ -41,8 +48,8 @@ class BufferTranslator(object):
 
 class LineBufferTranslator(BufferTranslator):
     """ Line buffer implementation supports translation of line-format input
-        even when input is not line-buffered. Caches input until newlines occur,
-        and then dispatches translated input to output buffer.
+        even when input is not already line-buffered. Caches input until newlines 
+        occur, and then dispatches translated input to output buffer.
     """
     def __init__(self, *a, **kw):
         super(LineBufferTranslator, self).__init__(*a, **kw)
