@@ -281,7 +281,7 @@ for i in range(0,200):
     Tracker.params('cm{0}'.format(i), 'metric{0}'.format(i))
 
 # Shortcut for creating trackers
-def create(account, name = None):
-    return Tracker(account, name)
+def create(account, *args, **kwargs):
+    return Tracker(account, *args, **kwargs)
 
 # vim: set nowrap tabstop=4 shiftwidth=4 softtabstop=0 expandtab textwidth=0 filetype=python foldmethod=indent foldcolumn=4
