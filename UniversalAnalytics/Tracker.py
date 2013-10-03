@@ -11,6 +11,7 @@ from urllib2 import urlopen, build_opener, install_opener
 from urllib2 import Request, HTTPSHandler
 from urllib import urlencode
 
+import random
 import datetime
 import time
 
@@ -129,11 +130,14 @@ class Tracker(object):
 
             
 
-    def __init__(self, account, name = None, client_id = None):
+    def __init__(self, account, name = None, client_id = None, user_id = None):
         self.account = account
         self.state = {}
         if name:
             Tracker.trackers[ name ] = self
+
+        if user_id:
+            self.state[ 'uid' ] = user_id
 
         self.http = HTTPPost(v = 1, tid = account, cid = client_id)
 
@@ -206,6 +210,7 @@ class Tracker(object):
 
 # Declaring name mappings for Measurement Protocol parameters
 Tracker.params('cid', 'client-id', 'clientId', 'clientid')
+Tracker.params('uid', 'user-id', 'userId', 'userid')
 Tracker.params('dp', 'page', 'path')
 Tracker.params('dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
 Tracker.params('dl', 'location')
