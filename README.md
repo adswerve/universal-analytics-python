@@ -2,6 +2,11 @@
 
 This library provides a Python interface for the Universal Analytics Measurement Protocol, with an interface modeled (loosely) after Google's `analytics.js`.
 
+**NOTE** this project is reasonably feature-complete for most use-cases, covering all relevant features of the Measurement Protocol, however we still consider it _beta_. Please feel free to file issues for feature requests.
+
+# Contact
+Email: `opensource@analyticspros.com`
+
 # Usage
 
 For the most accurate data in your reports, Analytics Pros recommends establishing a distinct ID for each of your users, and integrating that ID on your front-end web tracking, as well as back-end tracking calls. This provides for a consistent, correct representation of user engagement, without skewing overall visit metrics (and others).
@@ -51,6 +56,9 @@ Example:
 # Features not implemented
 
 * Throttling
+
+We're particularly interested in the scope of throttling for back-end tracking for users who have a defined use-case for it. Please [contact us](mailto:opensource@analyticspros.com) if you have such a use-case.
+
 
 # License
 
