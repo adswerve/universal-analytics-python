@@ -67,7 +67,8 @@ class HTTPPost(object):
         install_opener(opener)
 
     # Store properties for all requests
-    def __init__(self, *args, **opts):
+    def __init__(self, user_agent = None, *args, **opts):
+        self.user_agent = user_agent or 'Analytics Pros - Universal Analytics (Python)'
         self.attribs = {}
         self.base_attribs = opts
         self.attribs.update(opts)
@@ -90,14 +91,17 @@ class HTTPPost(object):
 
     # Apply stored properties to the given dataset & POST to the configured endpoint 
     def send(self, **data):
-        data.update(self.base_attribs)
-        data.update(self.attribs)
-        self.fixUTF8(data) # Ensure proper encoding for UA's servers...
+        temp_data = {}
+        temp_data.update(self.base_attribs)
+        temp_data.update(self.attribs)
+        temp_data.update(data)
+        self.fixUTF8(temp_data) # Ensure proper encoding for UA's servers...
+        
         request = Request(
                 self.endpoint, 
-                data = urlencode(data), 
+                data = urlencode(temp_data), 
                 headers = {
-                    'User-Agent': 'Analytics Pros - Universal Analytics (Python)'
+                    'User-Agent': self.user_agent
                 }
             )
         urlopen(request)
@@ -115,6 +119,7 @@ class Tracker(object):
 
     @classmethod
     def params(cls, base, *names):
+        cls.data_mapping[ base ] = base
         for i in names:
             cls.data_mapping[ i ] = base
 
@@ -130,7 +135,7 @@ class Tracker(object):
 
             
 
-    def __init__(self, account, name = None, client_id = None, user_id = None):
+    def __init__(self, account, name = None, client_id = None, user_id = None, user_agent = None):
         self.account = account
         self.state = {}
         if name:
