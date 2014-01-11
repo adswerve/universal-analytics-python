@@ -58,7 +58,7 @@ class Time(object):
         return (now - base) * 1000
 
 
-class HTTPPost(object):
+class HTTPRequest(object):
     """ URL Construction and request handling abstraction.
         This is not intended to be used outside this module.
 
@@ -69,6 +69,7 @@ class HTTPPost(object):
     endpoint = 'https://www.google-analytics.com/collect'
     attribs = {}
     base_attribs = {}
+
     
     @staticmethod
     def debug():
@@ -94,23 +95,25 @@ class HTTPPost(object):
         self.attribs.update(opts)
 
     @classmethod
-    def fixUTF8(cls, data):
+    def fixUTF8(cls, data): # Ensure proper encoding for UA's servers...
         """ Convert all strings to UTF-8 """
         for key in data:
             if isinstance(data[ key ], basestring):
                 data[ key ] = data[ key ].encode('utf-8')
+        return data
 
-    # Apply stored properties to the given dataset & POST to the configured endpoint 
-    def send(self, **data):
+
+    def getCurrentParameters(self, transcient_data):
         temp_data = {}
         temp_data.update(self.base_attribs)
         temp_data.update(self.attribs)
-        temp_data.update(data)
-        self.fixUTF8(temp_data) # Ensure proper encoding for UA's servers...
-        
+        temp_data.update(transcient_data)
+        return self.fixUTF8(temp_data)
+
+    # Apply stored properties to the given dataset & POST to the configured endpoint 
+    def send(self, **data):     
         request = Request(
-                self.endpoint, 
-                data = urlencode(temp_data), 
+                self.endpoint + '?' + urlencode(self.getCurrentParameters(data)), 
                 headers = {
                     'User-Agent': self.user_agent
                 }
@@ -118,6 +121,18 @@ class HTTPPost(object):
         urlopen(request)
 
 
+class HTTPPost(HTTPRequest):
+
+    # Apply stored properties to the given dataset & POST to the configured endpoint 
+    def send(self, **data):
+        request = Request(
+                self.endpoint, 
+                data = urlencode(self.getCurrentParameters(data)), 
+                headers = {
+                    'User-Agent': self.user_agent
+                }
+            )
+        urlopen(request)
 
 
 class Tracker(object):
@@ -146,7 +161,7 @@ class Tracker(object):
 
             
 
-    def __init__(self, account, name = None, client_id = None, user_id = None, user_agent = None):
+    def __init__(self, account, name = None, client_id = None, user_id = None, user_agent = None, use_post = True):
         self.account = account
         self.state = {}
         if name:
@@ -158,7 +173,10 @@ class Tracker(object):
         if client_id is None:
             client_id = generate_uuid()
 
-        self.http = HTTPPost(v = 1, tid = account, cid = client_id)
+        if use_post is False:
+            self.http = HTTPRequest(v = 1, tid = account, cid = client_id)
+        else: 
+            self.http = HTTPPost(v = 1, tid = account, cid = client_id)
 
     # Issue HTTP requests on the measurement protocol
     def send(self, hittype, *args, **opts):

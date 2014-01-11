@@ -18,7 +18,7 @@ if DEBUG: # these are optional...
     Tracker.HTTPPost.debug() # Enables debugging in urllib2
 
 # Create the tracker
-tracker = Tracker.create('UA-XXXXX-Y', name = 'mytracker')
+tracker = Tracker.create('UA-XXXXX-Y', name = 'mytracker', use_post = True)
 
 # Apply campaign settings
 tracker.set('campaignName', 'testing')
