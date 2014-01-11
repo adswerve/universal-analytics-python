@@ -259,12 +259,13 @@ class Tracker(object):
                     data[ key ] = val
 
 
-        result = {}
-        result.update(self.params)
-        result.update(data)
+        for k in self.params: # update only absent parameters
+            if k not in data:
+                data[ k ] = self.params[ k ]
+   
 
         # Transmit the hit to Google...
-        self.http.send(dict(self.filter_payload(result)))
+        self.http.send(dict(self.filter_payload(data)))
 
 
 
@@ -273,7 +274,26 @@ class Tracker(object):
     def set(self, name, value):
         param = self.getparam(name)
         if param is not None:
+            if value is None:
+                del self.params[ name ]
+            else:
+                self.params[ param ] = value
+
+
+
+    def __getitem__(self, name):
+        return self.params.get(self.getparam(name), None)
+
+    def __setitem__(self, name, value):
+        param = self.getparam(name)
+        if param is not None:
             self.params[ param ] = value
+
+    def __delitem__(self, name):
+        param = self.getparam(name)
+        if param in self.params:
+            del self.params[ param ]
+
 
 
 
