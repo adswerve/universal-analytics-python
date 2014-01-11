@@ -14,6 +14,17 @@ from urllib import urlencode
 import random
 import datetime
 import time
+import uuid
+import hashlib
+
+
+def generate_uuid(basedata = None):
+    """ Provides a _random_ UUID with no input, or a UUID4-format MD5 checksum of any input data provided """
+    if basedata is None:
+        return str(uuid.uuid4())
+    elif isinstance(basedata, basestring):
+        checksum = hashlib.md5(basedata).hexdigest()
+        return '%8s-%4s-%4s-%4s-%12s' % (checksum[0:8], checksum[8:12], checksum[12:16], checksum[16:20], checksum[20:32])
 
 
 class Time(object):
@@ -143,6 +154,9 @@ class Tracker(object):
 
         if user_id:
             self.state[ 'uid' ] = user_id
+
+        if client_id is None:
+            client_id = generate_uuid()
 
         self.http = HTTPPost(v = 1, tid = account, cid = client_id)
 
