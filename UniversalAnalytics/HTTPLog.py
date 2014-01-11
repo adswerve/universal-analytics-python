@@ -81,8 +81,12 @@ class HTTPTranslator(LineBufferTranslator):
 
     RE_LINE_PARSER = re.compile(r'^(?:([a-z]+):)\s*(\'?)([^\r\n]*)\2(?:[\r\n]*)$')
     RE_LINE_BREAK = re.compile(r'(\r?\n|(?:\\r)?\\n)')
-    RE_HTTP_METHOD = re.compile('^(POST|GET|HEAD|DELETE|PUT|TRACE|OPTIONS)')
+    RE_HTTP_METHOD = re.compile(r'^(POST|GET|HEAD|DELETE|PUT|TRACE|OPTIONS)')
+    RE_PARAMETER_SPACER = re.compile(r'&([a-z0-9]+)=')
 
+    @classmethod
+    def spacer(cls, line):
+        return cls.RE_PARAMETER_SPACER.sub(r' &\1= ', line)
 
     def translate(self, line):
 
@@ -92,7 +96,7 @@ class HTTPTranslator(LineBufferTranslator):
             value = parsed.group(3)
             stage = parsed.group(1)
 
-            if stage == 'send':
+            if stage == 'send': # query string is rendered here
                 return '\n# HTTP Request:\n' + self.stripslashes(value)
             elif stage == 'reply':
                 return '\n\n# HTTP Response:\n' + self.stripslashes(value)
@@ -100,6 +104,7 @@ class HTTPTranslator(LineBufferTranslator):
                 return value + '\n'
             else:
                 return value
+
 
         return line
 
