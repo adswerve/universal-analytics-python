@@ -9,6 +9,7 @@
 
 from urllib2 import urlopen, build_opener, install_opener
 from urllib2 import Request, HTTPSHandler
+from urllib2 import URLError, HTTPError
 from urllib import urlencode
 
 import random
@@ -16,6 +17,10 @@ import datetime
 import time
 import uuid
 import hashlib
+import socket
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def generate_uuid(basedata = None):
@@ -27,7 +32,7 @@ def generate_uuid(basedata = None):
         return '%8s-%4s-%4s-%4s-%12s' % (checksum[0:8], checksum[8:12], checksum[12:16], checksum[16:20], checksum[20:32])
 
 
-class Time(object):
+class Time(datetime.datetime):
     """ Wrappers and convenience methods for processing various time representations """
     
     @classmethod
@@ -35,7 +40,7 @@ class Time(object):
         """ Produce a full |datetime.datetime| object from a Unix timestamp """
         base = list(time.gmtime(seconds))[0:6]
         base.append(milliseconds * 1000) # microseconds
-        return datetime.datetime(* base)
+        return cls(* base)
 
     @classmethod
     def to_unix(cls, timestamp):
@@ -56,6 +61,7 @@ class Time(object):
         if now is None:
             now = time.time()
         return (now - base) * 1000
+
 
 
 class HTTPRequest(object):
@@ -118,7 +124,22 @@ class HTTPRequest(object):
                     'User-Agent': self.user_agent
                 }
             )
-        urlopen(request)
+        self.open(request)
+
+    def open(self, request):
+        try:
+            return urlopen(request)
+        except HTTPError as e:
+            return False
+        except URLError as e:
+            self.cache_request(request)
+            return False
+
+    def cache_request(self, request):
+        record = (Time.now(), request.get_full_url(), request.get_data(), request.headers)
+        pass
+
+        
 
 
 class HTTPPost(HTTPRequest):
@@ -132,7 +153,7 @@ class HTTPPost(HTTPRequest):
                     'User-Agent': self.user_agent
                 }
             )
-        urlopen(request)
+        self.open(request)
 
 
 class Tracker(object):
@@ -233,8 +254,10 @@ class Tracker(object):
                 data[ self.data_mapping[ key ] ] = val
 
 
+
         # Transmit the hit to Google...
         self.http.send(t = hittype, **data)
+
 
 
 
