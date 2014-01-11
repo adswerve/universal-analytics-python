@@ -73,8 +73,6 @@ class HTTPRequest(object):
     """
 
     endpoint = 'https://www.google-analytics.com/collect'
-    attribs = {}
-    base_attribs = {}
 
     
     @staticmethod
@@ -87,18 +85,7 @@ class HTTPRequest(object):
     # Store properties for all requests
     def __init__(self, user_agent = None, *args, **opts):
         self.user_agent = user_agent or 'Analytics Pros - Universal Analytics (Python)'
-        self.attribs = {}
-        self.base_attribs = opts
-        self.attribs.update(opts)
 
-    # Clear transcient properties; restore only the props given at instantiation (__init__)
-    def reset(self):
-        self.attribs = {}
-        self.attribs.update(self.base_attribs)
-
-    # Store transcient properties for subsequent requests
-    def update(self, **opts):
-        self.attribs.update(opts)
 
     @classmethod
     def fixUTF8(cls, data): # Ensure proper encoding for UA's servers...
@@ -109,17 +96,11 @@ class HTTPRequest(object):
         return data
 
 
-    def getCurrentParameters(self, transcient_data):
-        temp_data = {}
-        temp_data.update(self.base_attribs)
-        temp_data.update(self.attribs)
-        temp_data.update(transcient_data)
-        return self.fixUTF8(temp_data)
 
     # Apply stored properties to the given dataset & POST to the configured endpoint 
-    def send(self, **data):     
+    def send(self, data):     
         request = Request(
-                self.endpoint + '?' + urlencode(self.getCurrentParameters(data)), 
+                self.endpoint + '?' + urlencode(self.fixUTF8(data)), 
                 headers = {
                     'User-Agent': self.user_agent
                 }
@@ -139,16 +120,16 @@ class HTTPRequest(object):
         record = (Time.now(), request.get_full_url(), request.get_data(), request.headers)
         pass
 
-        
+
 
 
 class HTTPPost(HTTPRequest):
 
     # Apply stored properties to the given dataset & POST to the configured endpoint 
-    def send(self, **data):
+    def send(self, data):
         request = Request(
                 self.endpoint, 
-                data = urlencode(self.getCurrentParameters(data)), 
+                data = urlencode(self.fixUTF8(data)), 
                 headers = {
                     'User-Agent': self.user_agent
                 }
@@ -156,19 +137,43 @@ class HTTPPost(HTTPRequest):
         self.open(request)
 
 
+
+
+
+
+
+
+
 class Tracker(object):
     """ Primary tracking interface for Universal Analytics """
-    trackers = {}
-    state = {}
-    data_mapping = {  }
+    params = None
+    parameter_alias = {}
     valid_hittypes = ('pageview', 'event', 'social', 'appview', 'transaction', 'item', 'exception', 'timing')
 
 
     @classmethod
-    def params(cls, base, *names):
-        cls.data_mapping[ base ] = base
+    def alias(cls, base, *names):
+        """ Declare an alternate (humane) name for a measurement protocol parameter """
+        cls.parameter_alias[ base ] = base
         for i in names:
-            cls.data_mapping[ i ] = base
+            cls.parameter_alias[ i ] = base
+
+
+    @classmethod
+    def getparam(cls, name):
+        if name and name[0] == '&':
+            return name
+        else:
+            return cls.parameter_alias.get(name, None)
+
+
+    @classmethod
+    def filter_payload(cls, data):
+        for k, v in data.iteritems():
+            param = cls.getparam(k) 
+            if param is not None:
+                yield (param, v) 
+
 
     @classmethod
     def hittime(cls, timestamp = None, age = None, milliseconds = None):
@@ -180,42 +185,49 @@ class Tracker(object):
         if isinstance(age, (int, float)):
             return int(age * 1000) + (milliseconds or 0)
 
-            
+  
+
+    @property
+    def account(self):
+        return self.params.get('tid', None)
+
 
     def __init__(self, account, name = None, client_id = None, user_id = None, user_agent = None, use_post = True):
-        self.account = account
-        self.state = {}
-        if name:
-            Tracker.trackers[ name ] = self
+    
+        if use_post is False:
+            self.http = HTTPRequest(user_agent = user_agent)
+        else: 
+            self.http = HTTPPost(user_agent = user_agent)
 
-        if user_id:
-            self.state[ 'uid' ] = user_id
+        self.params = { 'v': 1, 'tid': account }
 
         if client_id is None:
             client_id = generate_uuid()
 
-        if use_post is False:
-            self.http = HTTPRequest(v = 1, tid = account, cid = client_id)
-        else: 
-            self.http = HTTPPost(v = 1, tid = account, cid = client_id)
+        self.params[ 'cid' ] = client_id
+
+        if user_id:
+            self.params[ 'uid' ] = user_id
+
 
     # Issue HTTP requests on the measurement protocol
-    def send(self, hittype, *args, **opts):
-        data = {}
-        data.update(self.state)
+    def send(self, hittype, *args, **data):
 
-        hittime = opts.get('hittime', None)
-        hitage = opts.get('hitage', None)
+        if hittype not in self.valid_hittypes:
+            raise KeyError('Unsupported Universal Analytics Hit Type: {0}'.format(repr(hittype)))
+
+        hittime = data.pop('hittime', None)
+        hitage = data.pop('hitage', None)
+
+
+        data[ 't' ] = hittype # integrate hit type parameter
 
         if hittime is not None: # an absolute timestamp
             data['qt'] = self.hittime(timestamp = hittime)
 
         if hitage is not None: # a relative age (in seconds)
             data['qt'] = self.hittime(age = hitage)
-
-        if hittype not in self.valid_hittypes:
-            raise KeyError('Unsupported Universal Analytics Hit Type: {0}'.format(repr(hittype)))
-
+    
         if hittype == 'pageview' and len(args) and isinstance(args[0], basestring):
             data['dp'] = args[0] # page path
 
@@ -243,107 +255,108 @@ class Tracker(object):
 
         for item in args: # process dictionary-object arguments of transcient data
             if isinstance(item, dict):
-                for key, val in item.items():
-                    if key in self.data_mapping:
-                        data[ self.data_mapping[ key ] ] = val
-                    else:
-                        data[ key ] = val
-
-        for key, val in opts.items(): # process attributes given as named arguments
-            if key in self.data_mapping:
-                data[ self.data_mapping[ key ] ] = val
+                for key, val in self.filter_payload(item):
+                    data[ key ] = val
 
 
+        result = {}
+        result.update(self.params)
+        result.update(data)
 
         # Transmit the hit to Google...
-        self.http.send(t = hittype, **data)
+        self.http.send(dict(self.filter_payload(result)))
 
 
 
 
     # Setting persistent attibutes of the session/hit/etc (inc. custom dimensions/metrics)
     def set(self, name, value):
-        if name in self.data_mapping:
-            self.state[ self.data_mapping[ name ] ] = value
-        else:
-            pass
+        param = self.getparam(name)
+        if param is not None:
+            self.params[ param ] = value
+
+
+
 
 # Declaring name mappings for Measurement Protocol parameters
-Tracker.params('cid', 'client-id', 'clientId', 'clientid')
-Tracker.params('uid', 'user-id', 'userId', 'userid')
-Tracker.params('dp', 'page', 'path')
-Tracker.params('dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
-Tracker.params('dl', 'location')
-Tracker.params('dh', 'hostname')
-Tracker.params('sc', 'sessioncontrol', 'session-control', 'sessionControl')
-Tracker.params('dr', 'referrer', 'referer')
-Tracker.params('qt', 'queueTime', 'queue-time')
+Tracker.alias('cid', 'client-id', 'clientId', 'clientid')
+Tracker.alias('uid', 'user-id', 'userId', 'userid')
+Tracker.alias('dp', 'page', 'path')
+Tracker.alias('dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
+Tracker.alias('dl', 'location')
+Tracker.alias('dh', 'hostname')
+Tracker.alias('sc', 'sessioncontrol', 'session-control', 'sessionControl')
+Tracker.alias('dr', 'referrer', 'referer')
+Tracker.alias('qt', 'queueTime', 'queue-time')
+Tracker.alias('t', 'hitType', 'hittype')
+Tracker.alias('v', 'protocol-version')
+Tracker.alias('tid', 'trackingId', 'account')
 
 # Campaign attribution
-Tracker.params('cn', 'campaign', 'campaignName', 'campaign-name')
-Tracker.params('cs', 'source', 'campaignSource', 'campaign-source')
-Tracker.params('cm', 'medium', 'campaignMedium', 'campaign-medium')
-Tracker.params('ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
-Tracker.params('cc', 'content', 'campaignContent', 'campaign-content')
-Tracker.params('ci', 'campaignId', 'campaignID', 'campaign-id')
+Tracker.alias('cn', 'campaign', 'campaignName', 'campaign-name')
+Tracker.alias('cs', 'source', 'campaignSource', 'campaign-source')
+Tracker.alias('cm', 'medium', 'campaignMedium', 'campaign-medium')
+Tracker.alias('ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
+Tracker.alias('cc', 'content', 'campaignContent', 'campaign-content')
+Tracker.alias('ci', 'campaignId', 'campaignID', 'campaign-id')
 
 # Technical specs
-Tracker.params('sr', 'screenResolution', 'screen-resolution', 'resolution')
-Tracker.params('vp', 'viewport', 'viewportSize', 'viewport-size')
-Tracker.params('de', 'encoding', 'documentEncoding', 'document-encoding')
-Tracker.params('sd', 'colors', 'screenColors', 'screen-colors')
-Tracker.params('ul', 'language', 'user-language', 'userLanguage')
+Tracker.alias('sr', 'screenResolution', 'screen-resolution', 'resolution')
+Tracker.alias('vp', 'viewport', 'viewportSize', 'viewport-size')
+Tracker.alias('de', 'encoding', 'documentEncoding', 'document-encoding')
+Tracker.alias('sd', 'colors', 'screenColors', 'screen-colors')
+Tracker.alias('ul', 'language', 'user-language', 'userLanguage')
 
 # Mobile app
-Tracker.params('an', 'appName', 'app-name', 'app')
-Tracker.params('cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
-Tracker.params('av', 'appVersion', 'app-version', 'version')
+Tracker.alias('an', 'appName', 'app-name', 'app')
+Tracker.alias('cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
+Tracker.alias('av', 'appVersion', 'app-version', 'version')
 
 # Ecommerce
-Tracker.params('ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
-Tracker.params('ti', 'transaction', 'transactionId', 'transaction-id')
-Tracker.params('tr', 'revenue', 'transactionRevenue', 'transaction-revenue')
-Tracker.params('ts', 'shipping', 'transactionShipping', 'transaction-shipping')
-Tracker.params('tt', 'tax', 'transactionTax', 'transaction-tax')
-Tracker.params('cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
-Tracker.params('in', 'item-name', 'itemName')
-Tracker.params('ip', 'item-price', 'itemPrice')
-Tracker.params('iq', 'item-quantity', 'itemQuantity')
-Tracker.params('ic', 'item-code', 'sku', 'itemCode')
-Tracker.params('iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
+Tracker.alias('ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
+Tracker.alias('ti', 'transaction', 'transactionId', 'transaction-id')
+Tracker.alias('tr', 'revenue', 'transactionRevenue', 'transaction-revenue')
+Tracker.alias('ts', 'shipping', 'transactionShipping', 'transaction-shipping')
+Tracker.alias('tt', 'tax', 'transactionTax', 'transaction-tax')
+Tracker.alias('cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
+Tracker.alias('in', 'item-name', 'itemName')
+Tracker.alias('ip', 'item-price', 'itemPrice')
+Tracker.alias('iq', 'item-quantity', 'itemQuantity')
+Tracker.alias('ic', 'item-code', 'sku', 'itemCode')
+Tracker.alias('iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
 
 # Events
-Tracker.params('ec', 'event-category', 'eventCategory', 'category')
-Tracker.params('ea', 'event-action', 'eventAction', 'action')
-Tracker.params('el', 'event-label', 'eventLabel', 'label')
-Tracker.params('ev', 'event-value', 'eventValue', 'value')
-Tracker.params('ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
+Tracker.alias('ec', 'event-category', 'eventCategory', 'category')
+Tracker.alias('ea', 'event-action', 'eventAction', 'action')
+Tracker.alias('el', 'event-label', 'eventLabel', 'label')
+Tracker.alias('ev', 'event-value', 'eventValue', 'value')
+Tracker.alias('ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
 
 
 # Social
-Tracker.params('sa', 'social-action', 'socialAction')
-Tracker.params('sn', 'social-network', 'socialNetwork')
-Tracker.params('st', 'social-target', 'socialTarget')
+Tracker.alias('sa', 'social-action', 'socialAction')
+Tracker.alias('sn', 'social-network', 'socialNetwork')
+Tracker.alias('st', 'social-target', 'socialTarget')
 
 # Exceptions
-Tracker.params('exd', 'exception-description', 'exceptionDescription')
-Tracker.params('exf', 'exception-fatal', 'exceptionFatal')
+Tracker.alias('exd', 'exception-description', 'exceptionDescription')
+Tracker.alias('exf', 'exception-fatal', 'exceptionFatal')
 
 # User Timing
-Tracker.params('utc', 'timingCategory', 'timing-category')
-Tracker.params('utv', 'timingVariable', 'timing-variable')
-Tracker.params('utt', 'time', 'timingTime', 'timing-time')
-Tracker.params('utl', 'timingLabel', 'timing-label')
-Tracker.params('dns', 'timingDNS', 'timing-dns')
-Tracker.params('pdt', 'timingPageLoad', 'timing-page-load')
-Tracker.params('rrt', 'timingRedirect', 'timing-redirect')
-Tracker.params('tcp', 'timingTCPConnect', 'timing-tcp-connect')
-Tracker.params('srt', 'timingServerResponse', 'timing-server-response')
+Tracker.alias('utc', 'timingCategory', 'timing-category')
+Tracker.alias('utv', 'timingVariable', 'timing-variable')
+Tracker.alias('utt', 'time', 'timingTime', 'timing-time')
+Tracker.alias('utl', 'timingLabel', 'timing-label')
+Tracker.alias('dns', 'timingDNS', 'timing-dns')
+Tracker.alias('pdt', 'timingPageLoad', 'timing-page-load')
+Tracker.alias('rrt', 'timingRedirect', 'timing-redirect')
+Tracker.alias('tcp', 'timingTCPConnect', 'timing-tcp-connect')
+Tracker.alias('srt', 'timingServerResponse', 'timing-server-response')
 
 # Custom dimensions and metrics
 for i in range(0,200):
-    Tracker.params('cd{0}'.format(i), 'dimension{0}'.format(i))
-    Tracker.params('cm{0}'.format(i), 'metric{0}'.format(i))
+    Tracker.alias('cd{0}'.format(i), 'dimension{0}'.format(i))
+    Tracker.alias('cm{0}'.format(i), 'metric{0}'.format(i))
 
 # Shortcut for creating trackers
 def create(account, *args, **kwargs):
