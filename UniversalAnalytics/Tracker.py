@@ -19,8 +19,6 @@ import uuid
 import hashlib
 import socket
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 
 def generate_uuid(basedata = None):
@@ -165,6 +163,15 @@ class Tracker(object):
 
 
     @classmethod
+    def setparam(cls, params, name, value):
+        param = cls.getparam(name)
+        if param is not None:
+            if value is None:
+                del params[ param ]
+            else:
+                params[ param ] = value
+
+    @classmethod
     def filter_payload(cls, data):
         for k, v in data.iteritems():
             param = cls.getparam(k) 
@@ -263,29 +270,22 @@ class Tracker(object):
 
 
     # Setting persistent attibutes of the session/hit/etc (inc. custom dimensions/metrics)
-    def set(self, name, value):
-        param = self.getparam(name)
-        if param is not None:
-            if value is None:
-                del self.params[ name ]
-            else:
-                self.params[ param ] = value
-
+    def set(self, name, value = None):
+        if isinstance(name, dict):
+            for key, value in name.iteritems():
+                self.setparam(self.params, key, value)
+        elif isinstance(name, basestring):
+            self.setparam(self.params, name, value)
 
 
     def __getitem__(self, name):
         return self.params.get(self.getparam(name), None)
 
     def __setitem__(self, name, value):
-        param = self.getparam(name)
-        if param is not None:
-            self.params[ param ] = value
+        self.setparam(self.params, name, value)
 
     def __delitem__(self, name):
-        param = self.getparam(name)
-        if param in self.params:
-            del self.params[ param ]
-
+        self.setparam(self.params, name, None)
 
 
 
@@ -351,8 +351,8 @@ Tracker.alias('sn', 'social-network', 'socialNetwork')
 Tracker.alias('st', 'social-target', 'socialTarget')
 
 # Exceptions
-Tracker.alias('exd', 'exception-description', 'exceptionDescription')
-Tracker.alias('exf', 'exception-fatal', 'exceptionFatal')
+Tracker.alias('exd', 'exception-description', 'exceptionDescription', 'exDescription')
+Tracker.alias('exf', 'exception-fatal', 'exceptionFatal', 'exFatal')
 
 # User Timing
 Tracker.alias('utc', 'timingCategory', 'timing-category')
