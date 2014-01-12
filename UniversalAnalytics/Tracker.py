@@ -141,15 +141,12 @@ class HTTPPost(HTTPRequest):
 
 
 
-
-
-
 class Tracker(object):
     """ Primary tracking interface for Universal Analytics """
     params = None
     parameter_alias = {}
     valid_hittypes = ('pageview', 'event', 'social', 'appview', 'transaction', 'item', 'exception', 'timing')
-
+ 
 
     @classmethod
     def alias(cls, base, *names):
@@ -173,6 +170,24 @@ class Tracker(object):
             param = cls.getparam(k) 
             if param is not None:
                 yield (param, v) 
+
+    option_sequence = {
+        'pageview': [ (basestring, 'dp') ],
+        'event': [ (basestring, 'ec'), (basestring, 'ea'), (basestring, 'el'), (int, 'ev') ],
+        'social': [ (basestring, 'sn'), (basestring, 'sa'), (basestring, 'st') ],
+        'timing': [ (basestring, 'utc'), (basestring, 'utv'), (basestring, 'utt'), (basestring, 'utl') ]
+    }
+
+    @classmethod
+    def consume_options(cls, data, hittype, args):
+        opt_position = 0
+        data[ 't' ] = hittype # integrate hit type parameter
+        if hittype in cls.option_sequence:
+            for expected_type, optname in cls.option_sequence[ hittype ]:
+                if opt_position < len(args) and isinstance(args[opt_position], expected_type):
+                    data[ optname ] = args[ opt_position ]
+                opt_position += 1
+
 
 
     @classmethod
@@ -220,37 +235,14 @@ class Tracker(object):
         hitage = data.pop('hitage', None)
 
 
-        data[ 't' ] = hittype # integrate hit type parameter
-
         if hittime is not None: # an absolute timestamp
             data['qt'] = self.hittime(timestamp = hittime)
 
         if hitage is not None: # a relative age (in seconds)
             data['qt'] = self.hittime(age = hitage)
-    
-        if hittype == 'pageview' and len(args) and isinstance(args[0], basestring):
-            data['dp'] = args[0] # page path
 
-        if hittype == 'event' and len(args) > 1:
-            data['ec'] = args[0] # event category
-            data['ea'] = args[1] # event action
-            if len(args) > 2 and isinstance(args[2], basestring):
-                data['el'] = args[2] # event label
-            if len(args) > 3 and isinstance(args[3], int):
-                data['ev'] = args[3] # event value
 
-        if hittype == 'social' and len(args) > 1:
-            data['sn'] = args[0] # social network
-            data['sa'] = args[1] # social action
-            if len(args) > 2 and isinstance(args[2], basestring):
-                data['st'] = args[2] # social target
-
-        if hittype == 'timing' and len(args) > 1:
-            data['utc'] = args[0] # timing category
-            data['utv'] = args[1] # timing variable
-            data['utt'] = args[2] # timing time (value)
-            if len(args) > 3 and isinstance(args[3], basestring):
-                data['utl'] = args[3] # timing label
+        self.consume_options(data, hittype, args)
 
 
         for item in args: # process dictionary-object arguments of transcient data
