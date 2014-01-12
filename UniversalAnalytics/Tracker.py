@@ -155,7 +155,8 @@ class Tracker(object):
 
 
     @classmethod
-    def getparam(cls, name):
+    def getparam(cls, name): 
+        """ Clean up parameter names, translate parameter aliases as needed """
         if name and name[0] == '&':
             return name
         else:
@@ -163,7 +164,8 @@ class Tracker(object):
 
 
     @classmethod
-    def setparam(cls, params, name, value):
+    def setparam(cls, params, name, value): 
+        """ Store or remove persistent values in tracker state (dictionary) """
         param = cls.getparam(name)
         if param is not None:
             if value is None:
@@ -173,6 +175,7 @@ class Tracker(object):
 
     @classmethod
     def filter_payload(cls, data):
+        """ Filter a payload (dictionary) for valid parameters """
         for k, v in data.iteritems():
             param = cls.getparam(k) 
             if param is not None:
@@ -187,6 +190,7 @@ class Tracker(object):
 
     @classmethod
     def consume_options(cls, data, hittype, args):
+        """ Interpret sequential arguments related to known hittypes based on declared structures """
         opt_position = 0
         data[ 't' ] = hittype # integrate hit type parameter
         if hittype in cls.option_sequence:
@@ -232,31 +236,27 @@ class Tracker(object):
             self.params[ 'uid' ] = user_id
 
 
-    # Issue HTTP requests on the measurement protocol
+    def set_timestamp(self, data):
+        """ Interpret time-related options, apply queue-time parameter as needed """
+        if 'hittime' in data: # an absolute timestamp
+            data['qt'] = self.hittime(timestamp = data.pop('hittime', None))
+        if 'hitage' in data: # a relative age (in seconds)
+            data['qt'] = self.hittime(age = data.pop('hitage', None))
+
+
     def send(self, hittype, *args, **data):
+        """ Transmit HTTP requests to Google Analytics using the measurement protocol """
 
         if hittype not in self.valid_hittypes:
             raise KeyError('Unsupported Universal Analytics Hit Type: {0}'.format(repr(hittype)))
 
-        hittime = data.pop('hittime', None)
-        hitage = data.pop('hitage', None)
-
-
-        if hittime is not None: # an absolute timestamp
-            data['qt'] = self.hittime(timestamp = hittime)
-
-        if hitage is not None: # a relative age (in seconds)
-            data['qt'] = self.hittime(age = hitage)
-
-
+        self.set_timestamp(data)
         self.consume_options(data, hittype, args)
-
 
         for item in args: # process dictionary-object arguments of transcient data
             if isinstance(item, dict):
                 for key, val in self.filter_payload(item):
                     data[ key ] = val
-
 
         for k in self.params: # update only absent parameters
             if k not in data:
