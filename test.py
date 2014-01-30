@@ -24,6 +24,8 @@ tracker = Tracker.create('UA-XXXXX-Y', name = 'mytracker', use_post = True)
 tracker.set('campaignName', 'testing')
 tracker.set('campaignMedium', 'testing')
 
+tracker['campaignSource'] = 'test-source'
+
 # Send a pageview
 tracker.send('pageview', '/test')
 
