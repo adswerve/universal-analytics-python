@@ -147,18 +147,18 @@ class Tracker(object):
  
 
     @classmethod
-    def alias(cls, base, *names):
+    def alias(cls, typemap, base, *names):
         """ Declare an alternate (humane) name for a measurement protocol parameter """
-        cls.parameter_alias[ base ] = base
+        cls.parameter_alias[ base ] = (typemap, base)
         for i in names:
-            cls.parameter_alias[ i ] = base
+            cls.parameter_alias[ i ] = (typemap, base)
 
 
     @classmethod
     def getparam(cls, name): 
         """ Clean up parameter names, translate parameter aliases as needed """
         if name and name[0] == '&':
-            return name
+            return name[1:]
         else:
             return cls.parameter_alias.get(name, None)
 
@@ -173,13 +173,17 @@ class Tracker(object):
             else:
                 params[ param ] = value
 
+
     @classmethod
-    def filter_payload(cls, data):
-        """ Filter a payload (dictionary) for valid parameters """
+    def payload_map(cls, data):
         for k, v in data.iteritems():
-            param = cls.getparam(k) 
-            if param is not None:
-                yield (param, v) 
+            if k in cls.parameter_alias:
+                yield v, cls.parameter_alias[ k ]
+
+    def payload(self, data):
+        for v, k in self.payload_map(data):
+            yield k[1], k[0](v) 
+
 
     option_sequence = {
         'pageview': [ (basestring, 'dp') ],
@@ -198,6 +202,7 @@ class Tracker(object):
                 if opt_position < len(args) and isinstance(args[opt_position], expected_type):
                     data[ optname ] = args[ opt_position ]
                 opt_position += 1
+        
 
 
 
@@ -218,7 +223,7 @@ class Tracker(object):
         return self.params.get('tid', None)
 
 
-    def __init__(self, account, name = None, client_id = None, user_id = None, user_agent = None, use_post = True):
+    def __init__(self, account, name = None, client_id = None, hash_client_id = False, user_id = None, user_agent = None, use_post = True):
     
         if use_post is False:
             self.http = HTTPRequest(user_agent = user_agent)
@@ -231,6 +236,8 @@ class Tracker(object):
             client_id = generate_uuid()
 
         self.params[ 'cid' ] = client_id
+
+        self.hash_client_id = hash_client_id
 
         if user_id:
             self.params[ 'uid' ] = user_id
@@ -255,16 +262,21 @@ class Tracker(object):
 
         for item in args: # process dictionary-object arguments of transcient data
             if isinstance(item, dict):
-                for key, val in self.filter_payload(item):
+                for key, val in self.payload(item):
                     data[ key ] = val
 
         for k in self.params: # update only absent parameters
             if k not in data:
                 data[ k ] = self.params[ k ]
+
    
+        data = dict(self.payload(data))
+
+        if self.hash_client_id:
+            data[ 'cid' ] = generate_uuid(data[ 'cid' ])
 
         # Transmit the hit to Google...
-        self.http.send(dict(self.filter_payload(data)))
+        self.http.send(data)
 
 
 
@@ -291,84 +303,85 @@ class Tracker(object):
 
 
 # Declaring name mappings for Measurement Protocol parameters
-Tracker.alias('cid', 'client-id', 'clientId', 'clientid')
-Tracker.alias('uid', 'user-id', 'userId', 'userid')
-Tracker.alias('dp', 'page', 'path')
-Tracker.alias('dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
-Tracker.alias('dl', 'location')
-Tracker.alias('dh', 'hostname')
-Tracker.alias('sc', 'sessioncontrol', 'session-control', 'sessionControl')
-Tracker.alias('dr', 'referrer', 'referer')
-Tracker.alias('qt', 'queueTime', 'queue-time')
-Tracker.alias('t', 'hitType', 'hittype')
-Tracker.alias('v', 'protocol-version')
-Tracker.alias('tid', 'trackingId', 'account')
+Tracker.alias(int, 'v', 'protocol-version')
+Tracker.alias(str, 'cid', 'client-id', 'clientId', 'clientid')
+Tracker.alias(str, 'tid', 'trackingId', 'account')
+Tracker.alias(str, 'uid', 'user-id', 'userId', 'userid')
+Tracker.alias(str, 'dp', 'page', 'path')
+Tracker.alias(str, 'dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
+Tracker.alias(str, 'dl', 'location')
+Tracker.alias(str, 'dh', 'hostname')
+Tracker.alias(str, 'sc', 'sessioncontrol', 'session-control', 'sessionControl')
+Tracker.alias(str, 'dr', 'referrer', 'referer')
+Tracker.alias(int, 'qt', 'queueTime', 'queue-time')
+Tracker.alias(str, 't', 'hitType', 'hittype')
+
 
 # Campaign attribution
-Tracker.alias('cn', 'campaign', 'campaignName', 'campaign-name')
-Tracker.alias('cs', 'source', 'campaignSource', 'campaign-source')
-Tracker.alias('cm', 'medium', 'campaignMedium', 'campaign-medium')
-Tracker.alias('ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
-Tracker.alias('cc', 'content', 'campaignContent', 'campaign-content')
-Tracker.alias('ci', 'campaignId', 'campaignID', 'campaign-id')
+Tracker.alias(str, 'cn', 'campaign', 'campaignName', 'campaign-name')
+Tracker.alias(str, 'cs', 'source', 'campaignSource', 'campaign-source')
+Tracker.alias(str, 'cm', 'medium', 'campaignMedium', 'campaign-medium')
+Tracker.alias(str, 'ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
+Tracker.alias(str, 'cc', 'content', 'campaignContent', 'campaign-content')
+Tracker.alias(str, 'ci', 'campaignId', 'campaignID', 'campaign-id')
 
 # Technical specs
-Tracker.alias('sr', 'screenResolution', 'screen-resolution', 'resolution')
-Tracker.alias('vp', 'viewport', 'viewportSize', 'viewport-size')
-Tracker.alias('de', 'encoding', 'documentEncoding', 'document-encoding')
-Tracker.alias('sd', 'colors', 'screenColors', 'screen-colors')
-Tracker.alias('ul', 'language', 'user-language', 'userLanguage')
+Tracker.alias(str, 'sr', 'screenResolution', 'screen-resolution', 'resolution')
+Tracker.alias(str, 'vp', 'viewport', 'viewportSize', 'viewport-size')
+Tracker.alias(str, 'de', 'encoding', 'documentEncoding', 'document-encoding')
+Tracker.alias(int, 'sd', 'colors', 'screenColors', 'screen-colors')
+Tracker.alias(str, 'ul', 'language', 'user-language', 'userLanguage')
 
 # Mobile app
-Tracker.alias('an', 'appName', 'app-name', 'app')
-Tracker.alias('cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
-Tracker.alias('av', 'appVersion', 'app-version', 'version')
+Tracker.alias(str, 'an', 'appName', 'app-name', 'app')
+Tracker.alias(str, 'cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
+Tracker.alias(str,'av', 'appVersion', 'app-version', 'version')
 
 # Ecommerce
-Tracker.alias('ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
-Tracker.alias('ti', 'transaction', 'transactionId', 'transaction-id')
-Tracker.alias('tr', 'revenue', 'transactionRevenue', 'transaction-revenue')
-Tracker.alias('ts', 'shipping', 'transactionShipping', 'transaction-shipping')
-Tracker.alias('tt', 'tax', 'transactionTax', 'transaction-tax')
-Tracker.alias('cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
-Tracker.alias('in', 'item-name', 'itemName')
-Tracker.alias('ip', 'item-price', 'itemPrice')
-Tracker.alias('iq', 'item-quantity', 'itemQuantity')
-Tracker.alias('ic', 'item-code', 'sku', 'itemCode')
-Tracker.alias('iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
+Tracker.alias(str, 'ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
+Tracker.alias(str, 'ti', 'transaction', 'transactionId', 'transaction-id')
+Tracker.alias(float, 'tr', 'revenue', 'transactionRevenue', 'transaction-revenue')
+Tracker.alias(float, 'ts', 'shipping', 'transactionShipping', 'transaction-shipping')
+Tracker.alias(float, 'tt', 'tax', 'transactionTax', 'transaction-tax')
+Tracker.alias(str, 'cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
+Tracker.alias(str, 'in', 'item-name', 'itemName')
+Tracker.alias(float, 'ip', 'item-price', 'itemPrice')
+Tracker.alias(float, 'iq', 'item-quantity', 'itemQuantity')
+Tracker.alias(str, 'ic', 'item-code', 'sku', 'itemCode')
+Tracker.alias(str, 'iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
 
 # Events
-Tracker.alias('ec', 'event-category', 'eventCategory', 'category')
-Tracker.alias('ea', 'event-action', 'eventAction', 'action')
-Tracker.alias('el', 'event-label', 'eventLabel', 'label')
-Tracker.alias('ev', 'event-value', 'eventValue', 'value')
-Tracker.alias('ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
+Tracker.alias(str, 'ec', 'event-category', 'eventCategory', 'category')
+Tracker.alias(str, 'ea', 'event-action', 'eventAction', 'action')
+Tracker.alias(str, 'el', 'event-label', 'eventLabel', 'label')
+Tracker.alias(int, 'ev', 'event-value', 'eventValue', 'value')
+Tracker.alias(int, 'ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
 
 
 # Social
-Tracker.alias('sa', 'social-action', 'socialAction')
-Tracker.alias('sn', 'social-network', 'socialNetwork')
-Tracker.alias('st', 'social-target', 'socialTarget')
+Tracker.alias(str, 'sa', 'social-action', 'socialAction')
+Tracker.alias(str, 'sn', 'social-network', 'socialNetwork')
+Tracker.alias(str, 'st', 'social-target', 'socialTarget')
 
 # Exceptions
-Tracker.alias('exd', 'exception-description', 'exceptionDescription', 'exDescription')
-Tracker.alias('exf', 'exception-fatal', 'exceptionFatal', 'exFatal')
+Tracker.alias(str, 'exd', 'exception-description', 'exceptionDescription', 'exDescription')
+Tracker.alias(int, 'exf', 'exception-fatal', 'exceptionFatal', 'exFatal')
 
 # User Timing
-Tracker.alias('utc', 'timingCategory', 'timing-category')
-Tracker.alias('utv', 'timingVariable', 'timing-variable')
-Tracker.alias('utt', 'time', 'timingTime', 'timing-time')
-Tracker.alias('utl', 'timingLabel', 'timing-label')
-Tracker.alias('dns', 'timingDNS', 'timing-dns')
-Tracker.alias('pdt', 'timingPageLoad', 'timing-page-load')
-Tracker.alias('rrt', 'timingRedirect', 'timing-redirect')
-Tracker.alias('tcp', 'timingTCPConnect', 'timing-tcp-connect')
-Tracker.alias('srt', 'timingServerResponse', 'timing-server-response')
+Tracker.alias(str, 'utc', 'timingCategory', 'timing-category')
+Tracker.alias(str, 'utv', 'timingVariable', 'timing-variable')
+Tracker.alias(float, 'utt', 'time', 'timingTime', 'timing-time')
+Tracker.alias(str, 'utl', 'timingLabel', 'timing-label')
+Tracker.alias(float, 'dns', 'timingDNS', 'timing-dns')
+Tracker.alias(float, 'pdt', 'timingPageLoad', 'timing-page-load')
+Tracker.alias(float, 'rrt', 'timingRedirect', 'timing-redirect')
+Tracker.alias(str, 'tcp', 'timingTCPConnect', 'timing-tcp-connect')
+Tracker.alias(str, 'srt', 'timingServerResponse', 'timing-server-response')
 
 # Custom dimensions and metrics
 for i in range(0,200):
-    Tracker.alias('cd{0}'.format(i), 'dimension{0}'.format(i))
-    Tracker.alias('cm{0}'.format(i), 'metric{0}'.format(i))
+    Tracker.alias(str, 'cd{0}'.format(i), 'dimension{0}'.format(i))
+    Tracker.alias(int, 'cm{0}'.format(i), 'metric{0}'.format(i))
 
 # Shortcut for creating trackers
 def create(account, *args, **kwargs):
