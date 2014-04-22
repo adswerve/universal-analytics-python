@@ -143,7 +143,7 @@ class Tracker(object):
     """ Primary tracking interface for Universal Analytics """
     params = None
     parameter_alias = {}
-    valid_hittypes = ('pageview', 'event', 'social', 'appview', 'transaction', 'item', 'exception', 'timing')
+    valid_hittypes = ('pageview', 'event', 'social', 'screenview', 'transaction', 'item', 'exception', 'timing')
  
 
     @classmethod
@@ -307,6 +307,8 @@ Tracker.alias(int, 'v', 'protocol-version')
 Tracker.alias(str, 'cid', 'client-id', 'clientId', 'clientid')
 Tracker.alias(str, 'tid', 'trackingId', 'account')
 Tracker.alias(str, 'uid', 'user-id', 'userId', 'userid')
+Tracker.alias(str, 'uip', 'user-ip', 'userIp', 'ipaddr')
+Tracker.alias(str, 'ua', 'userAgent', 'userAgentOverride', 'user-agent')
 Tracker.alias(str, 'dp', 'page', 'path')
 Tracker.alias(str, 'dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
 Tracker.alias(str, 'dl', 'location')
@@ -315,6 +317,7 @@ Tracker.alias(str, 'sc', 'sessioncontrol', 'session-control', 'sessionControl')
 Tracker.alias(str, 'dr', 'referrer', 'referer')
 Tracker.alias(int, 'qt', 'queueTime', 'queue-time')
 Tracker.alias(str, 't', 'hitType', 'hittype')
+Tracker.alias(int, 'aip', 'anonymizeIp', 'anonIp', 'anonymize-ip')
 
 
 # Campaign attribution
@@ -335,7 +338,9 @@ Tracker.alias(str, 'ul', 'language', 'user-language', 'userLanguage')
 # Mobile app
 Tracker.alias(str, 'an', 'appName', 'app-name', 'app')
 Tracker.alias(str, 'cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
-Tracker.alias(str,'av', 'appVersion', 'app-version', 'version')
+Tracker.alias(str, 'av', 'appVersion', 'app-version', 'version')
+Tracker.alias(str, 'aid', 'appID', 'appId', 'application-id', 'app-id', 'applicationId')
+Tracker.alias(str, 'aiid', 'appInstallerId', 'app-installer-id')
 
 # Ecommerce
 Tracker.alias(str, 'ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
