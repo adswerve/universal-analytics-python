@@ -33,7 +33,7 @@ Additional tracking types supported with property dictionaries:
 
 * transaction
 * item
-* appview
+* screenview 
 * exception
 
 Property dictionaries permit the same naming conventions given in the [analytics.js Field Reference](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference), with the addition of common spelling variations, abbreviations, and hyphenated names (rather than camel-case).  These are also demonstrated in the [test.py](./test.py) file.
