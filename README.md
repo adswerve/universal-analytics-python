@@ -1,6 +1,6 @@
 # Universal Analytics for Python
 
-This library provides a Python interface for the Universal Analytics Measurement Protocol, with an interface modeled (loosely) after Google's `analytics.js`.
+This library provides a Python interface to Google Analytics, supporting the Universal Analytics Measurement Protocol, with an interface modeled (loosely) after Google's `analytics.js`.
 
 **NOTE** this project is reasonably feature-complete for most use-cases, covering all relevant features of the Measurement Protocol, however we still consider it _beta_. Please feel free to file issues for feature requests.
 
