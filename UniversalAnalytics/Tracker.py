@@ -303,6 +303,11 @@ class Tracker(object):
 
 
 # Declaring name mappings for Measurement Protocol parameters
+MAX_CUSTOM_DEFINITIONS = 200
+MAX_EC_LISTS = 11  # 1-based index
+MAX_EC_PRODUCTS = 11  # 1-based index
+MAX_EC_PROMOTIONS = 11 # 1-based index
+
 Tracker.alias(int, 'v', 'protocol-version')
 Tracker.alias(str, 'cid', 'client-id', 'clientId', 'clientid')
 Tracker.alias(str, 'tid', 'trackingId', 'account')
@@ -387,6 +392,53 @@ Tracker.alias(str, 'srt', 'timingServerResponse', 'timing-server-response')
 for i in range(0,200):
     Tracker.alias(str, 'cd{0}'.format(i), 'dimension{0}'.format(i))
     Tracker.alias(int, 'cm{0}'.format(i), 'metric{0}'.format(i))
+
+# Enhanced Ecommerce
+Tracker.alias(str, 'pa')  # Product action
+Tracker.alias(str, 'tcc')  # Coupon code
+Tracker.alias(str, 'pal')  # Product action list
+Tracker.alias(int, 'cos')  # Checkout step
+Tracker.alias(str, 'col')  # Checkout step option
+
+Tracker.alias(str, 'promoa')  # Promotion action
+
+for product_index in range(1, MAX_PRODUCTS):
+    Tracker.alias(str, 'pr{0}id'.format(product_index))  # Product SKU
+    Tracker.alias(str, 'pr{0}nm'.format(product_index))  # Product name
+    Tracker.alias(str, 'pr{0}br'.format(product_index))  # Product brand
+    Tracker.alias(str, 'pr{0}ca'.format(product_index))  # Product category
+    Tracker.alias(str, 'pr{0}va'.format(product_index))  # Product variant
+    Tracker.alias(str, 'pr{0}pr'.format(product_index))  # Product price
+    Tracker.alias(int, 'pr{0}qt'.format(product_index))  # Product quantity
+    Tracker.alias(str, 'pr{0}cc'.format(product_index))  # Product coupon code
+    Tracker.alias(int, 'pr{0}ps'.format(product_index))  # Product position
+    
+    for custom_index in range(MAX_CUSTOM_DEFINITIONS):
+        Tracker.alias(str, 'pr{0}cd{1}'.format(product_index, custom_index))  # Product custom dimension
+        Tracker.alias(int, 'pr{0}cm{1}'.format(product_index, custom_index))  # Product custom metric
+
+    for list_index in range(1, MAX_EC_LISTS):
+        Tracker.alias(str, 'il{0}pi{1}id'.format(list_index, product_index))  # Product impression SKU
+        Tracker.alias(str, 'il{0}pi{1}nm'.format(list_index, product_index))  # Product impression name
+        Tracker.alias(str, 'il{0}pi{1}br'.format(list_index, product_index))  # Product impression brand
+        Tracker.alias(str, 'il{0}pi{1}ca'.format(list_index, product_index))  # Product impression category
+        Tracker.alias(str, 'il{0}pi{1}va'.format(list_index, product_index))  # Product impression variant
+        Tracker.alias(int, 'il{0}pi{1}ps'.format(list_index, product_index))  # Product impression position
+        Tracker.alias(int, 'il{0}pi{1}pr'.format(list_index, product_index))  # Product impression price
+
+        for custom_index in range(MAX_CUSTOM_DEFINITIONS):
+            Tracker.alias(str, 'il{0}pi{1}cd{2}'.format(list_index, product_index, custom_index))  # Product impression custom dimension
+            Tracker.alias(int, 'il{0}pi{1}cm{2}'.format(list_index, product_index, custom_index))  # Product impression custom metric
+
+for list_index in range(1, MAX_EC_LISTS):
+    Tracker.alias(str, 'il{0}nm'.format(list_index))  # Product impression list name
+
+for promotion_index in range(1, MAX_EC_PROMOTIONS):
+    Tracker.alias(str, 'promo{0}id'.format(promotion_index))  # Promotion ID
+    Tracker.alias(str, 'promo{0}nm'.format(promotion_index))  # Promotion name
+    Tracker.alias(str, 'promo{0}cr'.format(promotion_index))  # Promotion creative
+    Tracker.alias(str, 'promo{0}ps'.format(promotion_index))  # Promotion position
+
 
 # Shortcut for creating trackers
 def create(account, *args, **kwargs):
