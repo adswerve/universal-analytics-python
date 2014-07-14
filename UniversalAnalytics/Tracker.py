@@ -396,7 +396,7 @@ for i in range(0,200):
 # Enhanced Ecommerce
 Tracker.alias(str, 'pa')  # Product action
 Tracker.alias(str, 'tcc')  # Coupon code
-Tracker.alias(str, 'pal')  # Product action list
+Tracker.alias(unicode, 'pal')  # Product action list
 Tracker.alias(int, 'cos')  # Checkout step
 Tracker.alias(str, 'col')  # Checkout step option
 
@@ -404,10 +404,10 @@ Tracker.alias(str, 'promoa')  # Promotion action
 
 for product_index in range(1, MAX_PRODUCTS):
     Tracker.alias(str, 'pr{0}id'.format(product_index))  # Product SKU
-    Tracker.alias(str, 'pr{0}nm'.format(product_index))  # Product name
-    Tracker.alias(str, 'pr{0}br'.format(product_index))  # Product brand
-    Tracker.alias(str, 'pr{0}ca'.format(product_index))  # Product category
-    Tracker.alias(str, 'pr{0}va'.format(product_index))  # Product variant
+    Tracker.alias(unicode, 'pr{0}nm'.format(product_index))  # Product name
+    Tracker.alias(unicode, 'pr{0}br'.format(product_index))  # Product brand
+    Tracker.alias(unicode, 'pr{0}ca'.format(product_index))  # Product category
+    Tracker.alias(unicode, 'pr{0}va'.format(product_index))  # Product variant
     Tracker.alias(str, 'pr{0}pr'.format(product_index))  # Product price
     Tracker.alias(int, 'pr{0}qt'.format(product_index))  # Product quantity
     Tracker.alias(str, 'pr{0}cc'.format(product_index))  # Product coupon code
@@ -419,10 +419,10 @@ for product_index in range(1, MAX_PRODUCTS):
 
     for list_index in range(1, MAX_EC_LISTS):
         Tracker.alias(str, 'il{0}pi{1}id'.format(list_index, product_index))  # Product impression SKU
-        Tracker.alias(str, 'il{0}pi{1}nm'.format(list_index, product_index))  # Product impression name
-        Tracker.alias(str, 'il{0}pi{1}br'.format(list_index, product_index))  # Product impression brand
-        Tracker.alias(str, 'il{0}pi{1}ca'.format(list_index, product_index))  # Product impression category
-        Tracker.alias(str, 'il{0}pi{1}va'.format(list_index, product_index))  # Product impression variant
+        Tracker.alias(unicode, 'il{0}pi{1}nm'.format(list_index, product_index))  # Product impression name
+        Tracker.alias(unicode, 'il{0}pi{1}br'.format(list_index, product_index))  # Product impression brand
+        Tracker.alias(unicode, 'il{0}pi{1}ca'.format(list_index, product_index))  # Product impression category
+        Tracker.alias(unicode, 'il{0}pi{1}va'.format(list_index, product_index))  # Product impression variant
         Tracker.alias(int, 'il{0}pi{1}ps'.format(list_index, product_index))  # Product impression position
         Tracker.alias(int, 'il{0}pi{1}pr'.format(list_index, product_index))  # Product impression price
 
@@ -431,11 +431,11 @@ for product_index in range(1, MAX_PRODUCTS):
             Tracker.alias(int, 'il{0}pi{1}cm{2}'.format(list_index, product_index, custom_index))  # Product impression custom metric
 
 for list_index in range(1, MAX_EC_LISTS):
-    Tracker.alias(str, 'il{0}nm'.format(list_index))  # Product impression list name
+    Tracker.alias(unicode, 'il{0}nm'.format(list_index))  # Product impression list name
 
 for promotion_index in range(1, MAX_EC_PROMOTIONS):
     Tracker.alias(str, 'promo{0}id'.format(promotion_index))  # Promotion ID
-    Tracker.alias(str, 'promo{0}nm'.format(promotion_index))  # Promotion name
+    Tracker.alias(unicode, 'promo{0}nm'.format(promotion_index))  # Promotion name
     Tracker.alias(str, 'promo{0}cr'.format(promotion_index))  # Promotion creative
     Tracker.alias(str, 'promo{0}ps'.format(promotion_index))  # Promotion position
 
