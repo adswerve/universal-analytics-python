@@ -300,92 +300,98 @@ class Tracker(object):
         self.setparam(self.params, name, None)
 
 
+def safe_unicode(obj):
+    """ Safe convertion to the Unicode string version of the object """
+    try:
+        return unicode(obj)
+    except UnicodeDecodeError:
+        return obj.decode('utf-8')
 
 
 # Declaring name mappings for Measurement Protocol parameters
 Tracker.alias(int, 'v', 'protocol-version')
-Tracker.alias(str, 'cid', 'client-id', 'clientId', 'clientid')
-Tracker.alias(str, 'tid', 'trackingId', 'account')
-Tracker.alias(str, 'uid', 'user-id', 'userId', 'userid')
-Tracker.alias(str, 'uip', 'user-ip', 'userIp', 'ipaddr')
-Tracker.alias(str, 'ua', 'userAgent', 'userAgentOverride', 'user-agent')
-Tracker.alias(str, 'dp', 'page', 'path')
-Tracker.alias(str, 'dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
-Tracker.alias(str, 'dl', 'location')
-Tracker.alias(str, 'dh', 'hostname')
-Tracker.alias(str, 'sc', 'sessioncontrol', 'session-control', 'sessionControl')
-Tracker.alias(str, 'dr', 'referrer', 'referer')
+Tracker.alias(safe_unicode, 'cid', 'client-id', 'clientId', 'clientid')
+Tracker.alias(safe_unicode, 'tid', 'trackingId', 'account')
+Tracker.alias(safe_unicode, 'uid', 'user-id', 'userId', 'userid')
+Tracker.alias(safe_unicode, 'uip', 'user-ip', 'userIp', 'ipaddr')
+Tracker.alias(safe_unicode, 'ua', 'userAgent', 'userAgentOverride', 'user-agent')
+Tracker.alias(safe_unicode, 'dp', 'page', 'path')
+Tracker.alias(safe_unicode, 'dt', 'title', 'pagetitle', 'pageTitle' 'page-title')
+Tracker.alias(safe_unicode, 'dl', 'location')
+Tracker.alias(safe_unicode, 'dh', 'hostname')
+Tracker.alias(safe_unicode, 'sc', 'sessioncontrol', 'session-control', 'sessionControl')
+Tracker.alias(safe_unicode, 'dr', 'referrer', 'referer')
 Tracker.alias(int, 'qt', 'queueTime', 'queue-time')
-Tracker.alias(str, 't', 'hitType', 'hittype')
+Tracker.alias(safe_unicode, 't', 'hitType', 'hittype')
 Tracker.alias(int, 'aip', 'anonymizeIp', 'anonIp', 'anonymize-ip')
 
 
 # Campaign attribution
-Tracker.alias(str, 'cn', 'campaign', 'campaignName', 'campaign-name')
-Tracker.alias(str, 'cs', 'source', 'campaignSource', 'campaign-source')
-Tracker.alias(str, 'cm', 'medium', 'campaignMedium', 'campaign-medium')
-Tracker.alias(str, 'ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
-Tracker.alias(str, 'cc', 'content', 'campaignContent', 'campaign-content')
-Tracker.alias(str, 'ci', 'campaignId', 'campaignID', 'campaign-id')
+Tracker.alias(safe_unicode, 'cn', 'campaign', 'campaignName', 'campaign-name')
+Tracker.alias(safe_unicode, 'cs', 'source', 'campaignSource', 'campaign-source')
+Tracker.alias(safe_unicode, 'cm', 'medium', 'campaignMedium', 'campaign-medium')
+Tracker.alias(safe_unicode, 'ck', 'keyword', 'campaignKeyword', 'campaign-keyword')
+Tracker.alias(safe_unicode, 'cc', 'content', 'campaignContent', 'campaign-content')
+Tracker.alias(safe_unicode, 'ci', 'campaignId', 'campaignID', 'campaign-id')
 
 # Technical specs
-Tracker.alias(str, 'sr', 'screenResolution', 'screen-resolution', 'resolution')
-Tracker.alias(str, 'vp', 'viewport', 'viewportSize', 'viewport-size')
-Tracker.alias(str, 'de', 'encoding', 'documentEncoding', 'document-encoding')
+Tracker.alias(safe_unicode, 'sr', 'screenResolution', 'screen-resolution', 'resolution')
+Tracker.alias(safe_unicode, 'vp', 'viewport', 'viewportSize', 'viewport-size')
+Tracker.alias(safe_unicode, 'de', 'encoding', 'documentEncoding', 'document-encoding')
 Tracker.alias(int, 'sd', 'colors', 'screenColors', 'screen-colors')
-Tracker.alias(str, 'ul', 'language', 'user-language', 'userLanguage')
+Tracker.alias(safe_unicode, 'ul', 'language', 'user-language', 'userLanguage')
 
 # Mobile app
-Tracker.alias(str, 'an', 'appName', 'app-name', 'app')
-Tracker.alias(str, 'cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
-Tracker.alias(str, 'av', 'appVersion', 'app-version', 'version')
-Tracker.alias(str, 'aid', 'appID', 'appId', 'application-id', 'app-id', 'applicationId')
-Tracker.alias(str, 'aiid', 'appInstallerId', 'app-installer-id')
+Tracker.alias(safe_unicode, 'an', 'appName', 'app-name', 'app')
+Tracker.alias(safe_unicode, 'cd', 'contentDescription', 'screenName', 'screen-name', 'content-description')
+Tracker.alias(safe_unicode, 'av', 'appVersion', 'app-version', 'version')
+Tracker.alias(safe_unicode, 'aid', 'appID', 'appId', 'application-id', 'app-id', 'applicationId')
+Tracker.alias(safe_unicode, 'aiid', 'appInstallerId', 'app-installer-id')
 
 # Ecommerce
-Tracker.alias(str, 'ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
-Tracker.alias(str, 'ti', 'transaction', 'transactionId', 'transaction-id')
+Tracker.alias(safe_unicode, 'ta', 'affiliation', 'transactionAffiliation', 'transaction-affiliation')
+Tracker.alias(safe_unicode, 'ti', 'transaction', 'transactionId', 'transaction-id')
 Tracker.alias(float, 'tr', 'revenue', 'transactionRevenue', 'transaction-revenue')
 Tracker.alias(float, 'ts', 'shipping', 'transactionShipping', 'transaction-shipping')
 Tracker.alias(float, 'tt', 'tax', 'transactionTax', 'transaction-tax')
-Tracker.alias(str, 'cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
-Tracker.alias(str, 'in', 'item-name', 'itemName')
+Tracker.alias(safe_unicode, 'cu', 'currency', 'transactionCurrency', 'transaction-currency') # Currency code, e.g. USD, EUR
+Tracker.alias(safe_unicode, 'in', 'item-name', 'itemName')
 Tracker.alias(float, 'ip', 'item-price', 'itemPrice')
 Tracker.alias(float, 'iq', 'item-quantity', 'itemQuantity')
-Tracker.alias(str, 'ic', 'item-code', 'sku', 'itemCode')
-Tracker.alias(str, 'iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
+Tracker.alias(safe_unicode, 'ic', 'item-code', 'sku', 'itemCode')
+Tracker.alias(safe_unicode, 'iv', 'item-variation', 'item-category', 'itemCategory', 'itemVariation')
 
 # Events
-Tracker.alias(str, 'ec', 'event-category', 'eventCategory', 'category')
-Tracker.alias(str, 'ea', 'event-action', 'eventAction', 'action')
-Tracker.alias(str, 'el', 'event-label', 'eventLabel', 'label')
+Tracker.alias(safe_unicode, 'ec', 'event-category', 'eventCategory', 'category')
+Tracker.alias(safe_unicode, 'ea', 'event-action', 'eventAction', 'action')
+Tracker.alias(safe_unicode, 'el', 'event-label', 'eventLabel', 'label')
 Tracker.alias(int, 'ev', 'event-value', 'eventValue', 'value')
 Tracker.alias(int, 'ni', 'noninteractive', 'nonInteractive', 'noninteraction', 'nonInteraction')
 
 
 # Social
-Tracker.alias(str, 'sa', 'social-action', 'socialAction')
-Tracker.alias(str, 'sn', 'social-network', 'socialNetwork')
-Tracker.alias(str, 'st', 'social-target', 'socialTarget')
+Tracker.alias(safe_unicode, 'sa', 'social-action', 'socialAction')
+Tracker.alias(safe_unicode, 'sn', 'social-network', 'socialNetwork')
+Tracker.alias(safe_unicode, 'st', 'social-target', 'socialTarget')
 
 # Exceptions
-Tracker.alias(str, 'exd', 'exception-description', 'exceptionDescription', 'exDescription')
+Tracker.alias(safe_unicode, 'exd', 'exception-description', 'exceptionDescription', 'exDescription')
 Tracker.alias(int, 'exf', 'exception-fatal', 'exceptionFatal', 'exFatal')
 
 # User Timing
-Tracker.alias(str, 'utc', 'timingCategory', 'timing-category')
-Tracker.alias(str, 'utv', 'timingVariable', 'timing-variable')
+Tracker.alias(safe_unicode, 'utc', 'timingCategory', 'timing-category')
+Tracker.alias(safe_unicode, 'utv', 'timingVariable', 'timing-variable')
 Tracker.alias(float, 'utt', 'time', 'timingTime', 'timing-time')
-Tracker.alias(str, 'utl', 'timingLabel', 'timing-label')
+Tracker.alias(safe_unicode, 'utl', 'timingLabel', 'timing-label')
 Tracker.alias(float, 'dns', 'timingDNS', 'timing-dns')
 Tracker.alias(float, 'pdt', 'timingPageLoad', 'timing-page-load')
 Tracker.alias(float, 'rrt', 'timingRedirect', 'timing-redirect')
-Tracker.alias(str, 'tcp', 'timingTCPConnect', 'timing-tcp-connect')
-Tracker.alias(str, 'srt', 'timingServerResponse', 'timing-server-response')
+Tracker.alias(safe_unicode, 'tcp', 'timingTCPConnect', 'timing-tcp-connect')
+Tracker.alias(safe_unicode, 'srt', 'timingServerResponse', 'timing-server-response')
 
 # Custom dimensions and metrics
 for i in range(0,200):
-    Tracker.alias(str, 'cd{0}'.format(i), 'dimension{0}'.format(i))
+    Tracker.alias(safe_unicode, 'cd{0}'.format(i), 'dimension{0}'.format(i))
     Tracker.alias(int, 'cm{0}'.format(i), 'metric{0}'.format(i))
 
 # Shortcut for creating trackers

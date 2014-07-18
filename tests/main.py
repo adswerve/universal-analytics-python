@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- encoding: utf-8 -*-
 ###############################################################################
 # Test and example kit for Universal Analytics for Python
 # Copyright (c) 2013, Analytics Pros
@@ -57,6 +58,12 @@ tracker.send('transaction', {
     'transactionCurrency': 'USD'
 }, hitage = 7200)
 
+
+# Send unicode data:
+# As unicode
+tracker.send('event', u'câtēgøry', u'åctîõn', u'låbęl', u'válüē')
+# As str
+tracker.send('event', 'câtēgøry', 'åctîõn', 'låbęl', 'válüē')
 
 
 # vim: set nowrap tabstop=4 shiftwidth=4 softtabstop=0 expandtab textwidth=0 filetype=python foldmethod=indent foldcolumn=4
