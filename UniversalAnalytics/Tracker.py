@@ -408,7 +408,7 @@ Tracker.alias(str, 'col')  # Checkout step option
 
 Tracker.alias(str, 'promoa')  # Promotion action
 
-for product_index in range(1, MAX_PRODUCTS):
+for product_index in range(1, MAX_EC_PRODUCTS):
     Tracker.alias(str, 'pr{0}id'.format(product_index))  # Product SKU
     Tracker.alias(unicode, 'pr{0}nm'.format(product_index))  # Product name
     Tracker.alias(unicode, 'pr{0}br'.format(product_index))  # Product brand
