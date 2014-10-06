@@ -7,6 +7,20 @@ This library provides a Python interface to Google Analytics, supporting the Uni
 # Contact
 Email: `opensource@analyticspros.com`
 
+# Installation
+
+The easiest way to install universal-analytics is directly from PyPi using `pip` by running the following command:
+
+    pip install universal-analytics-python
+
+Or use latest code:
+
+    pip install -e git+https://github.com/analytics-pros/universal-analytics-python.git#egg=universal-analytics-python-dev
+
+Otherwise you can download source code and install it directly:
+
+    python setup.py install
+
 # Usage
 
 For the most accurate data in your reports, Analytics Pros recommends establishing a distinct ID for each of your users, and integrating that ID on your front-end web tracking, as well as back-end tracking calls. This provides for a consistent, correct representation of user engagement, without skewing overall visit metrics (and others).
