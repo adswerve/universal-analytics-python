@@ -7,6 +7,20 @@ This library provides a Python interface to Google Analytics, supporting the Uni
 # Contact
 Email: `opensource@analyticspros.com`
 
+# Installation
+
+The easiest way to install universal-analytics is directly from PyPi using `pip` by running the following command:
+
+    pip install universal-analytics-python
+
+Or use latest code:
+
+    pip install -e git+https://github.com/analytics-pros/universal-analytics-python.git#egg=universal-analytics-python-dev
+
+Otherwise you can download source code and install it directly:
+
+    python setup.py install
+
 # Usage
 
 For the most accurate data in your reports, Analytics Pros recommends establishing a distinct ID for each of your users, and integrating that ID on your front-end web tracking, as well as back-end tracking calls. This provides for a consistent, correct representation of user engagement, without skewing overall visit metrics (and others).
@@ -20,7 +34,7 @@ tracker = Tracker.create('UA-XXXXX-Y', client_id = CUSTOMER_UNIQUE_ID)
 tracker.send('event', 'Subscription', 'billing')
 ```
 
-Please see the [test.py](./test.py) script for additional examples.
+Please see the [tests/main.py](./tests/main.py) script for additional examples.
 
 This library support the following tracking types, with corresponding (optional) arguments:
 
@@ -36,7 +50,7 @@ Additional tracking types supported with property dictionaries:
 * screenview 
 * exception
 
-Property dictionaries permit the same naming conventions given in the [analytics.js Field Reference](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference), with the addition of common spelling variations, abbreviations, and hyphenated names (rather than camel-case).  These are also demonstrated in the [test.py](./test.py) file.
+Property dictionaries permit the same naming conventions given in the [analytics.js Field Reference](https://developers.google.com/analytics/devguides/collection/analyticsjs/field-reference), with the addition of common spelling variations, abbreviations, and hyphenated names (rather than camel-case).  These are also demonstrated in the [tests/main.py](./tests/main.py) file.
 
 Further, the property dictionaries support names as per the [Measurement Protocol Parameter Reference](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters), and properties/parameters can be passed as named arguments.
 
