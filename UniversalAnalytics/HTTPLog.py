@@ -21,7 +21,7 @@ class BufferTranslator(object):
 
     def __init__(self, output):
         self.output = output
-        self.encoding = output.encoding
+        self.encoding = getattr(output, 'encoding', None)
 
     def write(self, content):
         content = self.translate(content)
@@ -52,8 +52,8 @@ class LineBufferTranslator(BufferTranslator):
         occur, and then dispatches translated input to output buffer.
     """
     def __init__(self, *a, **kw):
-        super(LineBufferTranslator, self).__init__(*a, **kw)
         self._linepending = []
+        super(LineBufferTranslator, self).__init__(*a, **kw)
     
     def write(self, _input):
         lines = _input.splitlines(True)

@@ -1,5 +1,5 @@
 
-.PHONY: install clean remove upload
+.PHONY: install clean remove upload test
 
 install:
 	python setup.py install
@@ -11,3 +11,5 @@ upload:
 	python setup.py sdist upload
 
 
+test:
+	python -m unittest discover -f -s test/ -p 'test_*.py'
