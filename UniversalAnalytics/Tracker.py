@@ -115,7 +115,8 @@ class HTTPRequest(object):
             return False
 
     def cache_request(self, request):
-        record = (Time.now(), request.get_full_url(), request.get_data(), request.headers)
+        # TODO: implement a proper caching mechanism here for re-transmitting hits
+        # record = (Time.now(), request.get_full_url(), request.get_data(), request.headers)
         pass
 
 
@@ -153,36 +154,24 @@ class Tracker(object):
         for i in names:
             cls.parameter_alias[ i ] = (typemap, base)
 
-
     @classmethod
-    def getparam(cls, name): 
-        """ Clean up parameter names, translate parameter aliases as needed """
-        if name and name[0] == '&':
-            return name[1:]
+    def coerceParameter(cls, name, value = None):
+        if isinstance(name, basestring) and name[0] == '&':
+            return name[1:], str(value)
+        elif name in cls.parameter_alias:
+            typecast, param_name = cls.parameter_alias.get(name)
+            return param_name, typecast(value)
         else:
-            return cls.parameter_alias.get(name, None)
+            raise KeyError, 'Parameter "{0}" is not recognized'.format(name)
 
-
-    @classmethod
-    def setparam(cls, params, name, value): 
-        """ Store or remove persistent values in tracker state (dictionary) """
-        param = cls.getparam(name)
-        if param is not None:
-            if value is None:
-                del params[ param ]
-            else:
-                params[ param ] = value
-
-
-    @classmethod
-    def payload_map(cls, data):
-        for k, v in data.iteritems():
-            if k in cls.parameter_alias:
-                yield v, cls.parameter_alias[ k ]
 
     def payload(self, data):
-        for v, k in self.payload_map(data):
-            yield k[1], k[0](v) 
+        for key, value in data.iteritems():
+            try:
+                yield self.coerceParameter(key, value)
+            except KeyError:
+                continue
+
 
 
     option_sequence = {
@@ -239,7 +228,7 @@ class Tracker(object):
 
         self.hash_client_id = hash_client_id
 
-        if user_id:
+        if user_id is not None:
             self.params[ 'uid' ] = user_id
 
 
@@ -265,9 +254,9 @@ class Tracker(object):
                 for key, val in self.payload(item):
                     data[ key ] = val
 
-        for k in self.params: # update only absent parameters
+        for k, v in self.params.iteritems(): # update only absent parameters
             if k not in data:
-                data[ k ] = self.params[ k ]
+                data[ k ] = v
 
    
         data = dict(self.payload(data))
@@ -285,20 +274,32 @@ class Tracker(object):
     def set(self, name, value = None):
         if isinstance(name, dict):
             for key, value in name.iteritems():
-                self.setparam(self.params, key, value)
+                try:
+                    param, value = self.coerceParameter(key, value)
+                    self.params[param] = value
+                except KeyError:
+                    pass 
         elif isinstance(name, basestring):
-            self.setparam(self.params, name, value)
+            try:
+                param, value = self.coerceParameter(name, value)
+                self.params[param] = value
+            except KeyError:
+                pass 
+
 
 
     def __getitem__(self, name):
-        return self.params.get(self.getparam(name), None)
+        param, value = self.coerceParameter(name, None)
+        return self.params.get(param, None)
 
     def __setitem__(self, name, value):
-        self.setparam(self.params, name, value)
+        param, value = self.coerceParameter(name, value)
+        self.params[param] = value
 
     def __delitem__(self, name):
-        self.setparam(self.params, name, None)
-
+        param, value = self.coerceParameter(name, None)
+        if param in self.params:
+            del self.params[param]
 
 def safe_unicode(obj):
     """ Safe convertion to the Unicode string version of the object """
