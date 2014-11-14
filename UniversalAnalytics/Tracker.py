@@ -199,7 +199,7 @@ class Tracker(object):
     def hittime(cls, timestamp = None, age = None, milliseconds = None):
         """ Returns an integer represeting the milliseconds offset for a given hit (relative to now) """
         if isinstance(timestamp, (int, float)):
-            return int(Time.miliseconds_offset(Time.from_unix(timestamp, milliseconds = milliseconds)))
+            return int(Time.milliseconds_offset(Time.from_unix(timestamp, milliseconds = milliseconds)))
         if isinstance(timestamp, datetime.datetime):
             return int(Time.milliseconds_offset(timestamp))
         if isinstance(age, (int, float)):
