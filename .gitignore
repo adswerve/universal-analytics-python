@@ -1,5 +1,6 @@
 *.pyc
-RELEASE_VERSION
+release-tag
+commit-tag
 dist/
 build/
 scratch/

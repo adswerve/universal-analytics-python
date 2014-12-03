@@ -1,6 +1,9 @@
 from setuptools import setup
+import sys
 
-VERSION=open('RELEASE_VERSION').read().strip().split('\n')[-1]
+VERSION=open('commit-tag').read().strip()
+print >>sys.stderr, "Preparing version {0}\n".format(VERSION or "NOTFOUND")
+
 
 try:
     long_description=open('DESCRIPTION.rst', 'rt').read()
