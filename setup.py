@@ -1,6 +1,6 @@
 from setuptools import setup
 
-VERSION="0.2"
+VERSION=open('RELEASE_VERSION').read().strip().split('\n')[-1]
 
 try:
     long_description=open('DESCRIPTION.rst', 'rt').read()

@@ -1,1 +1,6 @@
 *.pyc
+RELEASE_VERSION
+dist/
+build/
+scratch/
+*.egg-info
