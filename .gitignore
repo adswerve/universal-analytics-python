@@ -1,5 +1,4 @@
 *.pyc
-release-tag
 commit-tag
 dist/
 build/

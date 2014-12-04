@@ -1,7 +1,7 @@
 from setuptools import setup
 import sys
 
-VERSION=open('commit-tag').read().strip()
+VERSION=open('commit-version').read().strip()
 print >>sys.stderr, "Preparing version {0}\n".format(VERSION or "NOTFOUND")
 
 
@@ -17,7 +17,7 @@ setup(
     description = "Universal Analytics Python Module",
     long_description = long_description,
 
-    version = VERSION,
+    version = VERSION or 'NOTFOUND',
 
     author = 'Sam Briesemeister',
     author_email = 'opensource@analyticspros.com',
@@ -27,6 +27,8 @@ setup(
 
     license = 'BSD',
     packages = ["UniversalAnalytics"],
+
+    install_requires = [],
 
     zip_safe = True,
 )
