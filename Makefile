@@ -29,7 +29,7 @@ build: test
 	python setup.py check build sdist bdist 
 
 upload: git-status-clean test commit-version build
-	test -n `cat commit-version` 
+	test -s commit-version
 	python setup.py ${DRYRUN_ARG} sdist bdist upload
 
 
