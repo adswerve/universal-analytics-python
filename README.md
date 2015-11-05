@@ -34,7 +34,7 @@ tracker = Tracker.create('UA-XXXXX-Y', client_id = CUSTOMER_UNIQUE_ID)
 tracker.send('event', 'Subscription', 'billing')
 ```
 
-Please see the [tests/main.py](./tests/main.py) script for additional examples.
+Please see the [test/test_everything.py](./test/test_everything.py) script for additional examples.
 
 This library support the following tracking types, with corresponding (optional) arguments:
 
