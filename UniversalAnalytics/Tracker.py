@@ -1,9 +1,9 @@
 ###############################################################################
 # Universal Analytics for Python
 # Copyright (c) 2013, Analytics Pros
-# 
-# This project is free software, distributed under the BSD license. 
-# Analytics Pros offers consulting and integration services if your firm needs 
+#
+# This project is free software, distributed under the BSD license.
+# Analytics Pros offers consulting and integration services if your firm needs
 # assistance in strategy, implementation, or auditing existing work.
 ###############################################################################
 
@@ -32,7 +32,7 @@ def generate_uuid(basedata = None):
 
 class Time(datetime.datetime):
     """ Wrappers and convenience methods for processing various time representations """
-    
+
     @classmethod
     def from_unix(cls, seconds, milliseconds = 0):
         """ Produce a full |datetime.datetime| object from a Unix timestamp """
@@ -54,7 +54,7 @@ class Time(datetime.datetime):
         if isinstance(timestamp, (int, float)):
             base = timestamp
         else:
-            base = cls.to_unix(timestamp) 
+            base = cls.to_unix(timestamp)
             base = base + (timestamp.microsecond / 1000000)
         if now is None:
             now = time.time()
@@ -72,7 +72,7 @@ class HTTPRequest(object):
 
     endpoint = 'https://www.google-analytics.com/collect'
 
-    
+
     @staticmethod
     def debug():
         """ Activate debugging on urllib2 """
@@ -95,10 +95,10 @@ class HTTPRequest(object):
 
 
 
-    # Apply stored properties to the given dataset & POST to the configured endpoint 
-    def send(self, data):     
+    # Apply stored properties to the given dataset & POST to the configured endpoint
+    def send(self, data):
         request = Request(
-                self.endpoint + '?' + urlencode(self.fixUTF8(data)), 
+                self.endpoint + '?' + urlencode(self.fixUTF8(data)),
                 headers = {
                     'User-Agent': self.user_agent
                 }
@@ -124,11 +124,11 @@ class HTTPRequest(object):
 
 class HTTPPost(HTTPRequest):
 
-    # Apply stored properties to the given dataset & POST to the configured endpoint 
+    # Apply stored properties to the given dataset & POST to the configured endpoint
     def send(self, data):
         request = Request(
-                self.endpoint, 
-                data = urlencode(self.fixUTF8(data)), 
+                self.endpoint,
+                data = urlencode(self.fixUTF8(data)),
                 headers = {
                     'User-Agent': self.user_agent
                 }
@@ -145,7 +145,7 @@ class Tracker(object):
     params = None
     parameter_alias = {}
     valid_hittypes = ('pageview', 'event', 'social', 'screenview', 'transaction', 'item', 'exception', 'timing')
- 
+
 
     @classmethod
     def alias(cls, typemap, base, *names):
@@ -191,7 +191,7 @@ class Tracker(object):
                 if opt_position < len(args) and isinstance(args[opt_position], expected_type):
                     data[ optname ] = args[ opt_position ]
                 opt_position += 1
-        
+
 
 
 
@@ -205,7 +205,7 @@ class Tracker(object):
         if isinstance(age, (int, float)):
             return int(age * 1000) + (milliseconds or 0)
 
-  
+
 
     @property
     def account(self):
@@ -213,10 +213,10 @@ class Tracker(object):
 
 
     def __init__(self, account, name = None, client_id = None, hash_client_id = False, user_id = None, user_agent = None, use_post = True):
-    
+
         if use_post is False:
             self.http = HTTPRequest(user_agent = user_agent)
-        else: 
+        else:
             self.http = HTTPPost(user_agent = user_agent)
 
         self.params = { 'v': 1, 'tid': account }
@@ -258,7 +258,7 @@ class Tracker(object):
             if k not in data:
                 data[ k ] = v
 
-   
+
         data = dict(self.payload(data))
 
         if self.hash_client_id:
@@ -278,13 +278,13 @@ class Tracker(object):
                     param, value = self.coerceParameter(key, value)
                     self.params[param] = value
                 except KeyError:
-                    pass 
+                    pass
         elif isinstance(name, basestring):
             try:
                 param, value = self.coerceParameter(name, value)
                 self.params[param] = value
             except KeyError:
-                pass 
+                pass
 
 
 
@@ -387,7 +387,7 @@ Tracker.alias(int, 'exf', 'exception-fatal', 'exceptionFatal', 'exFatal')
 # User Timing
 Tracker.alias(safe_unicode, 'utc', 'timingCategory', 'timing-category')
 Tracker.alias(safe_unicode, 'utv', 'timingVariable', 'timing-variable')
-Tracker.alias(float, 'utt', 'time', 'timingTime', 'timing-time')
+Tracker.alias(int, 'utt', 'time', 'timingTime', 'timing-time')
 Tracker.alias(safe_unicode, 'utl', 'timingLabel', 'timing-label')
 Tracker.alias(float, 'dns', 'timingDNS', 'timing-dns')
 Tracker.alias(float, 'pdt', 'timingPageLoad', 'timing-page-load')
@@ -419,7 +419,7 @@ for product_index in range(1, MAX_EC_PRODUCTS):
     Tracker.alias(int, 'pr{0}qt'.format(product_index))  # Product quantity
     Tracker.alias(str, 'pr{0}cc'.format(product_index))  # Product coupon code
     Tracker.alias(int, 'pr{0}ps'.format(product_index))  # Product position
-    
+
     for custom_index in range(MAX_CUSTOM_DEFINITIONS):
         Tracker.alias(str, 'pr{0}cd{1}'.format(product_index, custom_index))  # Product custom dimension
         Tracker.alias(int, 'pr{0}cm{1}'.format(product_index, custom_index))  # Product custom metric
