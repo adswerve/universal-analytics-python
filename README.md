@@ -5,7 +5,7 @@ This library provides a Python interface to Google Analytics, supporting the Uni
 **NOTE** this project is reasonably feature-complete for most use-cases, covering all relevant features of the Measurement Protocol, however we still consider it _beta_. Please feel free to file issues for feature requests.
 
 # Contact
-Email: `opensource@analyticspros.com`
+Email: `opensource@adswerve.com`
 
 # Installation
 
@@ -71,7 +71,7 @@ Example:
 
 * Throttling
 
-We're particularly interested in the scope of throttling for back-end tracking for users who have a defined use-case for it. Please [contact us](mailto:opensource@analyticspros.com) if you have such a use-case.
+We're particularly interested in the scope of throttling for back-end tracking for users who have a defined use-case for it. Please [contact us](mailto:opensource@adswerve.com) if you have such a use-case.
 
 
 # License
